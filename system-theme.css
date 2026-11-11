@@ -1,0 +1,174 @@
+/* =====================================================================
+   ARISE CORE - "SYSTEM" theme (Solo Leveling style)
+   Holographic blue windows, corner brackets, glowing borders and the
+   "NOTIFICATION" header band. Active when <html data-ui="system">.
+   Colors (--neon-cyan / --neon-purple / --bg-base) come from THEMES in index.html.
+   Loaded after the shared theme rules so these selectors win.
+   ===================================================================== */
+
+/* ---------- Tokens ---------- */
+html[data-ui="system"] {
+    --r: 2px; --rs: 2px; --rb: 2px; --rcb: 2px; --bw: 1px;
+    --sf: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --tt: uppercase; --ls: .09em;
+    --glass-blur: blur(6px);
+    --tint: 120, 190, 255;
+    --text-main: #e8f4ff; --text-muted: #8fb4dd;
+    --neon-green: #35e0b0; --neon-yellow: #8fd3ff; --neon-red: #ff5d7a;
+    --border-color: rgba(56, 160, 255, .35);
+    --sys-line: rgba(56, 160, 255, .6);
+    --sys-glow: 0 0 14px rgba(40, 140, 255, .45);
+    --sh: 0 0 22px rgba(40, 140, 255, .28), inset 0 0 34px rgba(40, 140, 255, .07);
+    --card-bg: linear-gradient(180deg, rgba(8, 30, 70, .78), rgba(3, 12, 34, .9));
+    /* "NOTIFICATION" header strip shared by panels, toasts, modals */
+    --sys-head: linear-gradient(90deg, rgba(40, 140, 255, .3), rgba(40, 140, 255, .04));
+}
+
+/* ---------- Background: deep navy, blue glow, purple shadow-smoke, faint grid ---------- */
+html[data-ui="system"] body {
+    background-color: var(--bg-base);
+    background-image:
+        radial-gradient(ellipse at 50% -10%, rgba(30, 120, 255, .28), transparent 55%),
+        radial-gradient(circle at 92% 88%, rgba(110, 60, 255, .26), transparent 45%),
+        radial-gradient(circle at 6% 70%, rgba(110, 60, 255, .14), transparent 40%),
+        linear-gradient(rgba(60, 150, 255, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(60, 150, 255, .05) 1px, transparent 1px);
+    background-size: auto, auto, auto, 44px 44px, 44px 44px;
+    background-attachment: fixed;
+}
+html[data-ui="system"] body::after { /* very faint scan-lines */
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+    background: repeating-linear-gradient(0deg, rgba(80, 160, 255, .025) 0 1px, transparent 1px 3px);
+}
+html[data-ui="system"] .modal-overlay { background: rgba(1, 6, 20, .8); }
+
+/* ---------- Windows: bracketed corners + glowing rim ---------- */
+html[data-ui="system"] :is(.panel, .stat-card, .calendar-section, .user-profile, .modal-content) {
+    border: 1px solid var(--sys-line);
+    box-shadow: var(--sh);
+    background:
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) left top / 14px 2px no-repeat,
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) left top / 2px 14px no-repeat,
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) right top / 14px 2px no-repeat,
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) right top / 2px 14px no-repeat,
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) left bottom / 14px 2px no-repeat,
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) left bottom / 2px 14px no-repeat,
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) right bottom / 14px 2px no-repeat,
+        linear-gradient(var(--neon-cyan), var(--neon-cyan)) right bottom / 2px 14px no-repeat,
+        var(--card-bg);
+}
+html[data-ui="system"] .modal-content { background-color: var(--modal-bg); }
+
+/* Row-like cards: thin outline with a bright left edge */
+html[data-ui="system"] :is(.habit-row, .sound-row, .journal-entry, .level-card, .bd-card, .search-result) {
+    background: rgba(10, 40, 90, .35);
+    border: 1px solid rgba(56, 160, 255, .3);
+    border-left: 3px solid var(--neon-cyan);
+}
+
+/* ---------- Titles: boxed "alert" icon + glowing text ---------- */
+html[data-ui="system"] .top-header h1 {
+    color: #fff; text-shadow: 0 0 18px rgba(40, 150, 255, .85);
+}
+html[data-ui="system"] .panel-title {
+    display: flex; width: fit-content; max-width: 100%; align-items: center; gap: 10px;
+    padding: 5px 14px 5px 5px; font-size: 14px; letter-spacing: .14em;
+    color: #fff; text-shadow: 0 0 10px var(--neon-cyan);
+    border: 1px solid var(--sys-line); background: rgba(40, 140, 255, .1);
+}
+html[data-ui="system"] .panel-title::before { /* square icon box with a ringed "!" */
+    content: "!"; flex: none; width: 24px; height: 24px;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 800; color: #fff;
+    border: 1px solid var(--sys-line);
+    background: radial-gradient(circle, transparent 7px, #fff 7px 8.2px, transparent 8.6px);
+}
+html[data-ui="system"] .stat-value { text-shadow: 0 0 14px currentColor; }
+
+/* ---------- Navigation ---------- */
+html[data-ui="system"] .sidebar { border-color: var(--sys-line); box-shadow: 0 0 30px rgba(40, 140, 255, .2); }
+html[data-ui="system"] .nav-item { letter-spacing: .05em; font-size: 14px; }
+html[data-ui="system"] .logo { text-shadow: 0 0 16px var(--neon-cyan); }
+html[data-ui="system"] .nav-item:hover,
+html[data-ui="system"] .nav-item.active {
+    background: linear-gradient(90deg, rgba(40, 140, 255, .28), transparent);
+    box-shadow: inset 0 0 18px rgba(40, 140, 255, .15);
+}
+html[data-ui="system"] .nav-item.active { color: #fff; text-shadow: 0 0 10px var(--neon-cyan); }
+html[data-ui="system"] .mobile-nav { border-top: 1px solid var(--sys-line); box-shadow: 0 -6px 24px rgba(40, 140, 255, .2); }
+html[data-ui="system"] .mobile-nav-item.active { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); }
+
+/* ---------- Controls ---------- */
+html[data-ui="system"] .btn-primary {
+    background: rgba(40, 140, 255, .14); border: 1px solid var(--neon-cyan);
+    color: #dff0ff; text-shadow: 0 0 8px var(--neon-cyan);
+    box-shadow: var(--sys-glow), inset 0 0 14px rgba(40, 140, 255, .18);
+}
+html[data-ui="system"] .btn-primary:hover { background: rgba(40, 140, 255, .32); box-shadow: 0 0 22px var(--neon-cyan); }
+html[data-ui="system"] :is(.tab-btn, .quick-chip, .mood-btn, .weekday-btn, .icon-btn) {
+    background: rgba(40, 140, 255, .08); border: 1px solid var(--sys-line); color: #cfe6ff;
+}
+html[data-ui="system"] :is(.tab-btn.active, .quick-chip:hover, .mood-btn.active, .weekday-btn.active) {
+    background: rgba(40, 140, 255, .3); color: #fff; box-shadow: var(--sys-glow);
+}
+html[data-ui="system"] :is(.input-group input, .input-group select, .input-group textarea, .sound-row select) {
+    background: rgba(4, 18, 46, .75); border: 1px solid var(--sys-line); color: #e8f4ff;
+}
+html[data-ui="system"] :is(.input-group input, .input-group select, .input-group textarea):focus {
+    outline: none; box-shadow: 0 0 0 1px var(--neon-cyan), var(--sys-glow);
+}
+html[data-ui="system"] .custom-checkbox { border-color: var(--sys-line); }
+html[data-ui="system"] .custom-checkbox.checked { box-shadow: 0 0 12px var(--neon-green); }
+
+/* ---------- Progress bars: glowing blue-to-violet fill ---------- */
+html[data-ui="system"] :is(.level-bar-container, .water-bar, .lv-bar, .badge-summary-bar, .badge-progress-bar) {
+    background: rgba(40, 140, 255, .12); border: 1px solid rgba(56, 160, 255, .3); border-radius: 0;
+}
+html[data-ui="system"] :is(.level-bar-fill, #wBar, .badge-summary-fill) {
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); border-radius: 0;
+    box-shadow: 0 0 12px var(--neon-cyan);
+}
+
+/* ---------- Toasts: a real "NOTIFICATION" window ---------- */
+html[data-ui="system"] .notify {
+    flex-wrap: wrap; gap: 10px 12px; padding: 0 38px 14px 14px;
+    background: linear-gradient(180deg, rgba(6, 26, 64, .94), rgba(3, 10, 28, .96));
+    border: 1px solid var(--sys-line); border-left: 1px solid var(--sys-line);
+    box-shadow: 0 0 24px rgba(40, 140, 255, .45), inset 0 0 28px rgba(40, 140, 255, .1);
+}
+html[data-ui="system"] .notify::before {
+    content: "! NOTIFICATION"; order: -1;
+    flex: 0 0 calc(100% + 52px); margin: 0 -38px 0 -14px; padding: 8px 14px;
+    font-size: 11px; font-weight: 700; letter-spacing: .22em;
+    color: #fff; text-shadow: 0 0 8px var(--neon-cyan);
+    background: var(--sys-head); border-bottom: 1px solid var(--sys-line);
+}
+html[data-ui="system"] .notify-icon { border-radius: 0; border: 1px solid var(--sys-line); }
+html[data-ui="system"] .notify-title { color: #fff; text-shadow: 0 0 8px rgba(40, 140, 255, .8); letter-spacing: .05em; }
+
+/* ---------- Level-up: "NOTIFICATION" window + big "LEVEL UP!" plate ---------- */
+html[data-ui="system"] .levelup-card::before {
+    content: "! NOTIFICATION"; display: block; margin: -30px -30px 22px; padding: 10px 16px;
+    font-size: 12px; font-weight: 700; letter-spacing: .26em; text-align: left;
+    color: #fff; text-shadow: 0 0 8px var(--neon-cyan);
+    background: var(--sys-head); border-bottom: 1px solid var(--sys-line);
+}
+html[data-ui="system"] .levelup-title { font-size: 0; letter-spacing: 0; } /* hide the default text ... */
+html[data-ui="system"] .levelup-title::after { /* ... and show the System's wording */
+    content: "LEVEL UP!"; display: inline-block; padding: 12px 24px;
+    font-size: clamp(26px, 7vw, 38px); font-weight: 800; letter-spacing: .12em; color: #fff;
+    border: 2px solid var(--neon-cyan); background: rgba(2, 10, 30, .75);
+    text-shadow: 0 0 18px var(--neon-cyan);
+    box-shadow: 0 0 26px rgba(40, 140, 255, .6), inset 0 0 22px rgba(40, 140, 255, .25);
+    animation: sysPulse 2s ease-in-out infinite;
+}
+html[data-ui="system"] .levelup-badge { color: #fff; text-shadow: 0 0 20px var(--neon-cyan); }
+@keyframes sysPulse {
+    50% { box-shadow: 0 0 40px rgba(40, 140, 255, .9), inset 0 0 30px rgba(40, 140, 255, .4); }
+}
+@media (max-width: 480px) {
+    html[data-ui="system"] .levelup-card::before { margin: -22px -22px 18px; } /* modal padding is 22px on phones */
+}
+@media (prefers-reduced-motion: reduce) {
+    html[data-ui="system"] .levelup-title::after { animation: none; }
+}

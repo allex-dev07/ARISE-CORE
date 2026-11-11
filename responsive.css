@@ -1,0 +1,133 @@
+/* =====================================================================
+   ARISE CORE - responsive layer. Loaded LAST so it wins the cascade.
+   Phones (320+), tablets, laptops, desktops, landscape, notches.
+   ===================================================================== */
+
+:root {
+    --rs-gutter: clamp(14px, 4vw, 40px);
+    --rs-gap: clamp(14px, 2.6vw, 25px);
+    --rs-pad: clamp(14px, 3vw, 25px);
+    --rs-h1: clamp(22px, 5.2vw, 32px);
+    --rs-max: 1400px;
+}
+
+/* ---------- Foundations ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { min-height: 100vh; min-height: 100dvh; }
+img, video, canvas, iframe { max-width: 100%; }
+.main-content, .modal-content, .more-sheet, .notify-stack, .auth-gate-overlay { overflow-wrap: anywhere; }
+
+/* ---------- Anti-blowout: grid/flex children may shrink ---------- */
+.main-content, .page-section, .page-section > *,
+.workspace > *, .skin-grid > *, .water-layout > *, .stats-grid > *,
+.fx-grid > *, .fx-form > *, .achievements-grid > *, .bd-grid > *,
+.level-grid > *, .skin-form-grid > *, .calendar-section,
+.habit-info, .top-header > div, .sound-row > *, .skin-slot-head > *,
+.panel-header > *, .fx-row .grow { min-width: 0; }
+
+.workspace { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--rs-gap); }
+.skin-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: var(--rs-gap); }
+.water-layout { grid-template-columns: minmax(min(260px, 100%), 360px) minmax(0, 1fr); gap: var(--rs-gap); }
+.stats-grid { grid-template-columns: repeat(auto-fit, minmax(min(165px, 100%), 1fr)); }
+.achievements-grid { grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); }
+.bd-grid { grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); }
+.level-grid { grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); }
+.skin-form-grid { grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); }
+.fx-grid { grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); }
+.fx-form { grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); }
+.fx-garden { grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
+.sound-row select { min-width: 0; }
+
+@media (max-width: 1024px) {
+    .workspace, .skin-grid, .water-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- Page frame, headers, panels ---------- */
+.main-content { padding-left: var(--rs-gutter); padding-right: var(--rs-gutter); gap: var(--rs-gap); }
+.page-section.active { gap: var(--rs-gap); }
+.top-header { flex-wrap: wrap; gap: 10px 16px; }
+.top-header h1 { font-size: var(--rs-h1); line-height: 1.15; }
+.panel { padding: var(--rs-pad); }
+.panel-header { flex-wrap: wrap; gap: 10px 14px; }
+.panel-title { font-size: clamp(16px, 2.4vw, 18px); }
+.stat-value { font-size: clamp(22px, 4.2vw, 28px); }
+.calendar-section { padding: var(--rs-pad); }
+.calendar-scroll-container { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+
+@media (min-width: 1500px) {
+    .main-content > .page-section { width: 100%; max-width: var(--rs-max); margin-left: auto; margin-right: auto; }
+}
+
+/* ---------- Sidebar: scrollable nav, pinned footer actions ---------- */
+.sidebar { height: 100vh; height: 100dvh; overflow: hidden; }
+.logo { margin-bottom: clamp(14px, 4vh, 40px); flex-shrink: 0; white-space: nowrap; }
+.nav-links { gap: clamp(2px, .8vh, 10px); min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; margin-bottom: 8px; }
+.nav-links .nav-item, .sidebar > .nav-item { flex-shrink: 0; }
+.sidebar > .nav-item { flex-shrink: 0; }
+html[data-ui] .sidebar { height: calc(100vh - 2 * var(--sbm)); height: calc(100dvh - 2 * var(--sbm)); }
+
+@media (min-width: 769px) and (max-height: 820px) {
+    .sidebar { padding-top: 14px; padding-bottom: 14px; }
+    .nav-item { padding-top: 9px; padding-bottom: 9px; }
+}
+
+/* Tablets: slimmer sidebar so content keeps room */
+@media (min-width: 769px) and (max-width: 1023px) {
+    html:not([data-ui]) .sidebar { width: 216px; padding: 16px 12px; }
+    html:not([data-ui]) .main-content { margin-left: 216px; width: calc(100% - 216px); }
+    html[data-ui]:not([data-ui="aurora"]) { --sw: 216px !important; }
+    .nav-item { gap: 12px; padding-left: 12px; padding-right: 12px; }
+    .logo { font-size: 19px; gap: 8px; } /* keeps "ARISE CORE" on one line in the slimmer sidebar */
+}
+
+/* ---------- Notifications ---------- */
+.notify-stack { max-width: calc(100vw - 24px); }
+@media (min-width: 481px) and (max-width: 768px) {
+    .notify-stack { left: auto; right: max(12px, env(safe-area-inset-right)); width: min(420px, calc(100vw - 24px)); }
+}
+
+/* ---------- Touch devices ---------- */
+@media (hover: none) { .habit-actions { opacity: 1; } }
+@media (pointer: coarse) {
+    .btn-primary, .icon-btn, .action-btn, .nav-item, .more-item { min-height: 44px; }
+    .action-btn { min-width: 44px; }
+    .tab-btn, .quick-chip, .skin-chip, .mood-btn, .weekday-btn { min-height: 40px; }
+    .quick-chip, .skin-chip { display: inline-flex; align-items: center; justify-content: center; } /* keep text centered when taller */
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 768px) {
+    .main-content { padding-left: max(var(--rs-gutter), env(safe-area-inset-left));
+        padding-right: max(var(--rs-gutter), env(safe-area-inset-right)); }
+    .mobile-nav { padding-left: max(6px, env(safe-area-inset-left)); padding-right: max(6px, env(safe-area-inset-right)); }
+    .mobile-nav-item { font-size: clamp(9px, 2.6vw, 11px); overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 360px) {
+    .stat-card { padding: 14px; }
+    .stats-grid, .bd-grid, .achievements-grid { gap: 8px; }
+    .modal-content { padding: 18px; }
+    .btn-primary { padding-left: 12px; padding-right: 12px; }
+}
+
+/* ---------- Modals & overlays ---------- */
+.modal-overlay { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+.modal-content { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+#fxFocus { overflow-y: auto; justify-content: safe center; }
+@media (max-height: 560px) {
+    .modal-content { padding: 16px; }
+    .fx-focus-ring, .fx-focus-ring svg { width: min(240px, 42vh); height: min(240px, 42vh); }
+    .fx-focus-time { font-size: clamp(28px, 9vh, 50px); }
+}
+
+/* ---------- Login screen ---------- */
+.auth-gate-overlay { padding: clamp(10px, 3vw, 18px); padding-bottom: max(clamp(10px, 3vw, 18px), env(safe-area-inset-bottom)); }
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+    .lg-card { flex-direction: row; height: auto; width: min(760px, 100%); }
+    .lg-bladewrap { flex: none; width: 38%; height: auto; }
+    .lg-blade { height: 100%; min-height: 100%; }
+    .lg-t { left: 20px !important; right: 20px !important; }
+    .lg-form { flex: 1; min-width: 0; padding: 18px 22px; }
+    .lg-title { margin-bottom: 12px; }
+    .lg-field { margin-bottom: 10px; }
+}
