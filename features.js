@@ -2034,9 +2034,7 @@ wrap('renderHomeTasks', () => renderEnergyNote());
 wrap('changePage', id => { if (FX.pages[id]) FX.pages[id](); });
 wrap('renderPrefsPanels', () => enhancePrefs());
 wrap('setGateMode', m => { const s = byId('gateSocial'), l = byId('gateForgotLink'); if (s) s.style.display = m === 'forgot' ? 'none' : ''; if (l) l.parentNode.style.display = m === 'login' ? '' : 'none'; });
-wrap('enforceAuthGate', () => { // show the welcome steps after the first login (the gate hides them while logged out)
-    try { if (isUserAuthenticated() && !localStorage.getItem('quantumWelcomed') && !localStorage.getItem('quantumDemoBackup') && getTotalCompleted() === 0) { renderOnboarding(); byId('welcomeModal').classList.add('show'); } } catch (e) {}
-});
+/* welcome steps removed */
 { // lock type bookkeeping when the normal PIN is used
     const _sp = window.setPin, _rp = window.removePin;
     if (typeof _sp === 'function') window.setPin = async function () { await _sp.apply(this, arguments); if (prefs.pinHash && prefs.lockType === 'pattern' && /^\d{4,8}$/.test((byId('pinNew') || {}).value || '1234') === true) { /* keep */ } if (prefs.pinHash) { prefs.lockType = 'pin'; savePrefs(); lockUI(); } };

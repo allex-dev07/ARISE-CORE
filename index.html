@@ -1274,7 +1274,6 @@
                 <label class="ds-box">
                     <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="search" id="dashSearchInput" placeholder="Search habits, tasks, notes, pages..." autocomplete="off" aria-label="Search" oninput="NAV.search(this.value)" onfocus="NAV.search(this.value)">
-                    <kbd>Ctrl K</kbd>
                 </label>
                 <div class="ds-results" id="dashSearchResults" hidden></div>
             </div>
@@ -3132,7 +3131,7 @@
             applyPrefs();
             autoBackup();
             try {
-                if (!localStorage.getItem('quantumWelcomed') && !demoBackupExists && getTotalCompleted() === 0) document.getElementById('welcomeModal').classList.add('show');
+                /* welcome steps removed */
             } catch (e) {}
             updateThemeButton();
             updateSoundButton();
