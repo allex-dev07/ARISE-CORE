@@ -1416,19 +1416,17 @@
         <div id="page-habits" class="page-section">
             <header class="top-header">
                 <div>
-                    <h1>My Routine</h1>
-                    <p>Habits, tasks, goals, skincare and notes - all in one place</p>
+                    <h1 style="font-weight: 800;">My Routine</h1>
                 </div>
             </header>
-            <div class="rt-jump" id="rtJump">
-                <button type="button" class="quick-chip" onclick="routineJump('habitsSection')">Habits</button>
-                <button type="button" class="quick-chip" onclick="routineJump('tasksSection')">Tasks</button>
-                <button type="button" class="quick-chip fx-adv" onclick="routineJump('goalsSection')">Goals</button>
-                <button type="button" class="quick-chip" onclick="routineJump('skincareSection')">Skincare &amp; To-Do</button>
-                <button type="button" class="quick-chip" onclick="routineJump('notesSection')">Notes</button>
-            </div>
             <div id="fxEnergyNote"></div>
-            <div id="habitsSection" class="workspace" style="grid-template-columns: 1fr;">
+            <div id="habitsSection" class="workspace" style="grid-template-columns: 1fr; margin-top: 30px;">
+                <header class="top-header" style="margin-bottom: 0;">
+                    <div>
+                        <h1>Habits</h1>
+                        <p>Check off your daily habits and keep the streak going</p>
+                    </div>
+                </header>
                 <section class="panel">
                     <div class="panel-header">
                         <h2 class="panel-title">Today's Checklist</h2>
