@@ -50,9 +50,9 @@ const IC = {
    adv    : hidden in Simple mode (same behaviour as before)                         */
 const TREE = [
     { key: 'dashboard', label: 'Dashboard', icon: 'dash', page: 'dashboard' },
-    { key: 'routine', label: 'My Routine', icon: 'routine', page: 'habits' },
-    { key: 'health', label: 'Health & Fitness', icon: 'health', page: 'water' },
-    { key: 'progress', label: 'My Progress', icon: 'progress', page: 'reports' },
+    { key: 'routine', label: 'My Routine', icon: 'routine', page: 'habits', short: 'Routine' },
+    { key: 'health', label: 'Health & Fitness', icon: 'health', page: 'water', short: 'Health' },
+    { key: 'progress', label: 'My Progress', icon: 'progress', page: 'reports', short: 'Progress' },
     { key: 'social', label: 'Social', icon: 'social', page: 'friends' },
     { key: 'account', label: 'Account & Settings', icon: 'account', drawerOnly: true, items: [
         { key: 'profile', label: 'Profile', icon: 'account', page: 'profile' },
@@ -120,10 +120,13 @@ function setupGroup(k) {
         for (let i = 1; i < els.length; i++) { els[i - 1].parentNode.insertBefore(els[i], els[i - 1].nextSibling); els[i].classList.add('grp-sib'); }
         els.forEach(e => { e.dataset.grp = k; });
         const focus = $('page-focus'); if (focus) focus.classList.add('fx-adv');
-        const bar = document.createElement('div'); bar.className = 'grp-bar'; bar.id = 'grpbar-' + k;
-        bar.innerHTML = `<header class="top-header"><div><h1>${g.title}</h1><p>${g.sub}</p></div></header><div class="rt-jump">${g.secs.map(sc => `<button type="button" class="quick-chip${sc.adv ? ' fx-adv' : ''}" data-jump="${sc.el || 'page-' + sc.page}">${sc.label}</button>`).join('')}</div>`;
-        bar.addEventListener('click', e => { const b = e.target.closest('[data-jump]'); if (b) jumpTo(b.dataset.jump); });
-        els[0].insertBefore(bar, els[0].firstChild);
+        const host = els[0].parentNode;
+        const head = document.createElement('div'); head.className = 'grp-head'; head.id = 'grphead-' + k; head.hidden = true;
+        head.innerHTML = `<header class="top-header"><div><h1>${g.title}</h1><p>${g.sub}</p></div></header>`;
+        const chips = document.createElement('div'); chips.className = 'rt-jump grp-chips'; chips.id = 'grpchips-' + k; chips.hidden = true;
+        chips.innerHTML = g.secs.map(sc => `<button type="button" class="quick-chip${sc.adv ? ' fx-adv' : ''}" data-jump="${sc.el || 'page-' + sc.page}">${sc.label}</button>`).join('');
+        chips.addEventListener('click', e => { const b = e.target.closest('[data-jump]'); if (b) jumpTo(b.dataset.jump); });
+        host.insertBefore(head, els[0]); host.insertBefore(chips, els[0]);
     }
     return true;
 }
@@ -134,6 +137,12 @@ function renderSibling(id) {
         else if (id === 'achievements' && typeof renderBadges === 'function') renderBadges();
         else if (window.FX && FX.pages && FX.pages[id]) FX.pages[id]();
     } catch (e) {}
+}
+function syncBars() {
+    Object.keys(GROUPS).forEach(k => {
+        const first = $('page-' + GROUP_PAGES[k][0]), on = !!(first && first.classList.contains('active'));
+        ['grphead-', 'grpchips-'].forEach(p => { const el = $(p + k); if (el) el.hidden = !on; });
+    });
 }
 function openGroup(pageId) {
     const k = PAGE_GROUP[pageId]; if (!k || !setupGroup(k)) return;
@@ -189,7 +198,7 @@ function buildBottom() {
     const nav = $('mobileNav'); if (!nav) return;
     nav.innerHTML = BOTTOM.map(g => {
         const click = g.items ? `NAV.sheet('${g.key}')` : `NAV.go('${g.key}')`;
-        return `<button type="button" class="mobile-nav-item" data-group="${g.key}" onclick="${click}" aria-label="${g.label}"><span class="mobile-nav-icon">${svg(IC[g.icon])}</span><span class="mn-label">${g.label}</span></button>`;
+        return `<button type="button" class="mobile-nav-item" data-group="${g.key}" onclick="${click}" aria-label="${g.label}"><span class="mobile-nav-icon">${svg(IC[g.icon])}</span><span class="mn-label">${g.short || g.label}</span></button>`;
     }).join('') + `<button type="button" class="mobile-nav-item mn-menu" onclick="NAV.openDrawer()" aria-label="More"><span class="mobile-nav-icon">${svg(IC.menu)}</span><span class="mn-label">More</span></button>`;
 }
 
@@ -298,7 +307,7 @@ function focusSearch() {
 function wire() {
     const orig = window.changePage;
     if (typeof orig === 'function' && !orig.__navWrapped) {
-        const wrapped = function (pageId) { const r = orig.apply(this, arguments); try { openGroup(pageId); syncActive(); clearDashSearch(); } catch (e) {} return r; };
+        const wrapped = function (pageId) { const r = orig.apply(this, arguments); try { openGroup(pageId); syncBars(); syncActive(); clearDashSearch(); } catch (e) {} return r; };
         wrapped.__navWrapped = true; window.changePage = wrapped;
     }
     document.addEventListener('click', e => { const s = $('dashSearch'); if (s && !s.contains(e.target)) { const b = $('dashSearchResults'); if (b) b.hidden = true; } });

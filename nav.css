@@ -127,12 +127,22 @@ html.fx-focusing .m-topbar, html.fx-focusing .nav-backdrop { display: none !impo
 .nv-card .s { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
 @media (hover: none) { .nv-card:hover { transform: none; } }
 
-/* My Routine: quick jump chips to each section (Habits, Tasks, Goals, Skincare, Notes) */
-.rt-jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
-.rt-jump .quick-chip { cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: transparent; font: inherit; }
-@media (max-width: 768px) { .rt-jump { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; } .rt-jump .quick-chip { flex: 0 0 auto; } }
-
-/* grouped pages (Health, Progress, Social): sections stacked under one title bar */
-.grp-bar { margin-bottom: 4px; }
-.grp-bar .top-header { margin-bottom: 14px; }
-.page-section.grp-sib.active { margin-top: 30px; }
+/* ---------- My Routine + grouped pages (Health, Progress, Social) ----------
+   Jump chips stay pinned while the long stacked page scrolls. */
+.rt-jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 8px 0 10px; position: sticky; top: 0; z-index: 20; background: var(--bg-base); }
+.rt-jump .quick-chip { cursor: pointer; border: 1px solid var(--border-color); background: transparent; font: inherit; font-size: 13px; padding: 6px 14px; }
+.rt-jump .quick-chip:hover, .rt-jump .quick-chip:focus-visible { color: var(--neon-cyan); border-color: var(--neon-cyan); outline: none; }
+.grp-head[hidden], .grp-chips[hidden] { display: none !important; }
+.grp-head .top-header { margin: 0; }
+.page-section.grp-sib.active { margin-top: 18px; }
+/* section titles inside a stacked page are smaller than the page title */
+#tasksSection .top-header h1, #goalsSection .top-header h1, #skincareSection .top-header h1, #notesSection .top-header h1,
+.page-section[data-grp] > .top-header h1 { font-size: clamp(20px, 3.4vw, 24px); }
+#tasksSection, #goalsSection, #skincareSection, #notesSection { scroll-margin-top: 70px; }
+.page-section[data-grp] { scroll-margin-top: 70px; }
+@media (max-width: 768px) {
+    .rt-jump { top: calc(59px + env(safe-area-inset-top)); flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-left: calc(-1 * var(--rs-gutter, 14px)); margin-right: calc(-1 * var(--rs-gutter, 14px)); padding-left: var(--rs-gutter, 14px); padding-right: var(--rs-gutter, 14px); }
+    .rt-jump::-webkit-scrollbar { display: none; }
+    .rt-jump .quick-chip { flex: 0 0 auto; min-height: 40px; }
+    #tasksSection, #goalsSection, #skincareSection, #notesSection, .page-section[data-grp] { scroll-margin-top: calc(120px + env(safe-area-inset-top)); }
+}

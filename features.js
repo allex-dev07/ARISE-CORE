@@ -146,7 +146,6 @@ FX.setEnergy = function (v) {
     dirty = true; saveData();
     applyEnergyAttr();
     try { renderHabits(); } catch (e) {}
-    try { renderHomeTasks(); } catch (e) {}
     renderEnergyNote(); renderDash();
     notify({ type: 'info', title: ({ 1: 'Low energy mode', 3: 'Medium energy', 5: 'High energy' })[v], message: v === 1 ? 'Showing easy habits and top-priority tasks first.' : v === 3 ? 'Hard habits are dimmed for now.' : 'Go for the hard stuff!' });
 };
@@ -281,7 +280,7 @@ function renderDash() {
             ${cbHtml}${rows || '<div class="fx-empty">Add a habit to get missions.</div>'}
             <div class="fx-realxp"><span>Reality XP today: <b>+${todayXp}</b> <span class="fx-muted">(bonus for real progress, not for tapping)</span></span><span class="quick-chip" style="margin:0" onclick="FX.go('reports')">See progress</span></div>${coachLineHtml()}`;
         renderEnergyNote();
-        renderStepsCard(); renderPetCard(); petCheckUnlock();
+        petCheckUnlock();
     } catch (e) { logFx('renderDash', e); }
 }
 FX.renderDash = renderDash;
@@ -1409,7 +1408,6 @@ function flushLive() { if (livePending > 0) { const n = livePending; livePending
 function liveTick() {
     const t = byId('fxStepsNum'); if (t) t.textContent = fmtN(stepsOn(TODAY()));
     const b = byId('fxStepsBar'); if (b) b.style.width = clamp(Math.round(stepsOn(TODAY()) / ST().goal * 100), 0, 100) + '%';
-    const c = byId('fxStepsCard'); if (c) renderStepsCard();
 }
 function onMotion(e) {
     if (!live) return;
@@ -1463,14 +1461,6 @@ FX.stepsSettings = function () {
     const s = ST(); s.goal = Math.round(g); s.stride = Math.round(st); dirty = true; saveData(); stepMsg = 'Settings saved.'; renderSteps();
 };
 
-/* ----- dashboard card ----- */
-function renderStepsCard() {
-    const box = byId('fxStepsCard'); if (!box) return; // Steps now lives on its own Steps page
-    const n = stepsOn(TODAY()), g = ST().goal, pct = clamp(Math.round(n / g * 100), 0, 100);
-    box.innerHTML = `<div class="panel-header" style="margin-bottom:10px;"><div><h2 class="panel-title">Steps</h2><span class="fx-muted">${fmtN(n)} / ${fmtN(g)} &middot; ${kmOf(n).toFixed(1)} km${live ? ' &middot; counting live' : ''}</span></div><button class="btn-primary" onclick="FX.go('steps')">Open</button></div>
-        <div class="fx-bar ${pct >= 100 ? 'green' : ''}" style="height:12px;"><i style="width:${pct}%"></i></div>
-        <div class="fx-chips" style="margin-top:12px;"><span class="quick-chip" onclick="FX.stepsAdd(500)">+500</span><span class="quick-chip" onclick="FX.stepsAdd(1000)">+1,000</span><span class="quick-chip" onclick="FX.stepsAdd(2000)">+2,000</span>${pct >= 100 ? '<span class="fx-xp" style="align-self:center;">Goal reached!</span>' : ''}</div>`;
-}
 
 /* ----- Steps page ----- */
 function renderSteps() {
@@ -1952,11 +1942,6 @@ function petSvg(i, scale, mood, gold) {
 function petGrowth() { const li = lvNow(), pct = li.end > li.start ? clamp((appState.totalXp - li.start) / (li.end - li.start), 0, 1) : 1; return { li, pct, scale: 0.55 + 0.45 * pct, stage: pct < 0.34 ? 'Baby' : pct < 0.67 ? 'Young' : 'Grown' }; }
 function activePet() { const g = petGrowth(), nw = newestIdx(), a = PT().active, i = a == null ? nw : a; return { i, grows: i === nw, g, gold: g.li.level > PETS.length }; }
 const petMsg = m => m === 'sad' ? 'Missing you. One small habit will cheer me up!' : m === 'sleepy' ? 'Zzz... see you tomorrow!' : ticksOn(TODAY()) > 0 ? 'Great work today! Look how happy I am!' : "Let's do a habit together!";
-function renderPetCard() {
-    const box = byId('fxPetCard'); if (!box) return; // the pet now lives on its own My Pet page
-    const a = activePet(), mood = petMood(), pct = Math.round(a.g.pct * 100);
-    box.innerHTML = `<div style="display:flex;gap:14px;align-items:center;"><div class="fx-pet-sm fx-pet-bob">${petSvg(a.i, a.grows ? a.g.scale : 1, mood, a.gold)}</div><div style="flex:1;min-width:0;"><div class="t" style="font-weight:700;">${E(petName(a.i))} <span class="fx-muted" style="font-weight:400;font-size:12px;">${a.grows ? a.g.stage : 'Grown'} &middot; Level ${a.g.li.level}</span></div><div class="fx-muted" style="font-size:12px;margin:3px 0 8px;">${E(petMsg(mood))}</div><div class="fx-bar green"><i style="width:${pct}%"></i></div><div class="fx-muted" style="font-size:11px;margin-top:4px;">${pct}% to your next pet</div></div><button class="btn-primary" onclick="FX.go('pet')">Open</button></div>`;
-}
 function petCheckUnlock() {
     const p = PT(), lv = lvNow().level;
     if (p.seen == null) { p.seen = lv; dirty = true; return; }
@@ -1972,8 +1957,8 @@ function renderPet() {
         <div class="fx-form" style="grid-template-columns:1fr auto;max-width:360px;margin:16px auto 0;"><div class="input-group"><label>Pet name</label><input type="text" id="fxPetName" maxlength="16" value="${E(p.names[a.i] || '')}" placeholder="${E(PETS[a.i][0])}"></div><button class="btn-primary" style="height:42px;" onclick="FX.petRename(${a.i})">Save</button></div></section>
         <section class="panel"><h2 class="panel-title" style="margin-bottom:10px;">Your pets (${Math.min(lv, PETS.length)}/${PETS.length})</h2><div class="fx-garden">${grid}</div><div class="fx-note">You get a new pet at every level. Your newest pet starts as a baby and grows bigger as you earn XP through the level. ${p.active != null ? '<span class="quick-chip" onclick="FX.petPick(null)">Follow my newest pet</span>' : ''}</div></section>`;
 }
-FX.petPick = i => { PT().active = i; dirty = true; saveData(); renderPet(); renderPetCard(); };
-FX.petRename = i => { const v = clip(byId('fxPetName').value, 16); if (v) PT().names[i] = v; else delete PT().names[i]; dirty = true; saveData(); renderPet(); renderPetCard(); notify({ type: 'success', title: 'Saved' }); };
+FX.petPick = i => { PT().active = i; dirty = true; saveData(); renderPet(); };
+FX.petRename = i => { const v = clip(byId('fxPetName').value, 16); if (v) PT().names[i] = v; else delete PT().names[i]; dirty = true; saveData(); renderPet(); notify({ type: 'success', title: 'Saved' }); };
 FX.pages.pet = renderPet;
 
 /* ================= Login: Google / Apple ================= */
@@ -1987,18 +1972,6 @@ window.fxOAuth = function (provider) {
 };
 
 /* ================= Navigation + wiring ================= */
-const NAV = [
-    ['smart', 'Smart Today', '<path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z"/>', false],
-    ['profile', 'Profile', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', false],
-    ['friends', 'Friends', '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>', false],
-    ['explore', 'Explore', '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>', false],
-    ['steps', 'Steps', '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>', false],
-    ['community', 'Community', '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>', false],
-    ['reports', 'Progress', '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>', false],
-    ['focus', 'Focus', '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>', true],
-    ['social', 'Share & Social', '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5a5 5 0 0 1 4.5 5"/>', true]
-];
-function buildNav() { /* navigation is built by nav.js (single definition for sidebar, bottom bar and drawer) */ }
 function buildPages() {
     makePage('smart', 'Smart Today', 'Missions that adapt to your energy, plus Focus Mode');
     makePage('profile', 'Profile', 'Your photo, details, account and stats');
@@ -2029,7 +2002,6 @@ wrap('updateUI', () => renderDash());
 wrap('updateUserGreeting', () => { applyGreetingName(); applyAvatar(); });
 wrap('saveData', () => { if (!inEval) scheduleEval(); });
 wrap('renderHabits', () => { renderEnergyNote(); renderStacks(); const gb = byId('fx-goals-body'); if (gb && !gb.contains(document.activeElement)) renderGoals(); });
-wrap('renderHomeTasks', () => renderEnergyNote());
 wrap('changePage', id => { if (FX.pages[id]) FX.pages[id](); });
 wrap('renderPrefsPanels', () => enhancePrefs());
 wrap('setGateMode', m => { const s = byId('gateSocial'), l = byId('gateForgotLink'); if (s) s.style.display = m === 'forgot' ? 'none' : ''; if (l) l.parentNode.style.display = m === 'login' ? '' : 'none'; });
@@ -2043,7 +2015,7 @@ wrap('setGateMode', m => { const s = byId('gateSocial'), l = byId('gateForgotLin
 function boot() {
     try {
         S();
-        buildPages(); buildNav(); ensureDashPanel(); focusOverlay();
+        buildPages(); ensureDashPanel(); focusOverlay();
         applySimple(); applyEnergyAttr(); applyGreetingName(); applyAvatar(); renderOnboarding(); lockUI();
         try { applyPrefs(); } catch (e) {}
         try { setGateMode(typeof gateMode === 'string' ? gateMode : 'login'); } catch (e) {}

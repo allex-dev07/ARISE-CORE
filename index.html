@@ -4040,17 +4040,6 @@
             }
         }
 
-        function renderHomeTasks() {
-            const box = document.getElementById('homeTasks');
-            if (!box) return;
-            const items = getTasksDueToday();
-            const doneCount = items.filter(i => i.task.done[i.date]).length;
-            document.getElementById('homeTasksCount').innerText = items.length ? `${doneCount}/${items.length} done` : '';
-            box.innerHTML = items.length
-                ? items.map(taskCheckRow).join('')
-                : '<div class="task-empty">No tasks for today. Tap "+ Add Task" to plan something.</div>';
-        }
-
         function setTaskTab(tab) {
             taskTab = tab;
             renderTasksPage();
@@ -4205,7 +4194,6 @@
             confirmDo('Delete this task?', () => {
                 appState.tasks = appState.tasks.filter(t => t.id !== id);
                 saveData();
-                renderHomeTasks();
                 renderTasksPage();
                 notify({ type: 'info', title: 'Task deleted' });
             }, 'Delete');
@@ -4264,7 +4252,6 @@
             renderMonthlyChart();
             renderWeeklyChart();
             renderWaterAll();
-            renderHomeTasks();
             if (typeof renderSkincareDashCard === 'function') renderSkincareDashCard();
             if (typeof renderSkincarePage === 'function' && document.getElementById('page-habits') && document.getElementById('page-habits').classList.contains('active')) renderSkincarePage();
             updateStreakAndBadges();
@@ -4608,7 +4595,7 @@ html[data-ui="legend"] :is(.panel,.stat-card,.calendar-section){clip-path:polygo
 @media(max-width:768px){.as-title{font-size:24px}#appearancePanel{padding:16px}.as-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.as-card{min-width:0;padding:8px}.as-prev{height:104px}.as-info{padding:10px 2px 2px}}
 </style>
 <link rel="stylesheet" href="responsive.css?v=29">
-<link rel="stylesheet" href="nav.css?v=35">
+<link rel="stylesheet" href="nav.css?v=36">
 <link rel="stylesheet" href="system-theme.css?v=28">
 <script>
 (function () {
@@ -6182,8 +6169,8 @@ window.addEventListener('load', () => {
 });
 </script>
 
-<script src="features.js?v=39"></script>
-<script src="nav.js?v=39"></script>
+<script src="features.js?v=40"></script>
+<script src="nav.js?v=40"></script>
 <script src="signup-wizard.js?v=28"></script>
 <script src="native.js"></script>
 </body>
