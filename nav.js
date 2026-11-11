@@ -52,7 +52,6 @@ const TREE = [
     { key: 'dashboard', label: 'Dashboard', icon: 'dash', page: 'dashboard' },
     { key: 'routine', label: 'My Routine', icon: 'routine', items: [
         { key: 'habits', label: 'Habits', icon: 'habits', page: 'habits' },
-        { key: 'goals', label: 'Goals', icon: 'goals', page: 'goals', adv: true },
         { key: 'skincare', label: 'Skincare & To-Do', icon: 'skincare', page: 'skincare' },
         { key: 'journal', label: 'Notes', icon: 'notes', page: 'journal' }
     ] },
@@ -86,7 +85,7 @@ const TREE = [
 
 /* page -> default highlighted entry (used when a page is opened from somewhere else in the app) */
 const PAGE_KEY = {
-    dashboard: 'dashboard', habits: 'habits', goals: 'goals', skincare: 'skincare', journal: 'journal',
+    dashboard: 'dashboard', habits: 'habits', goals: 'habits', skincare: 'skincare', journal: 'journal',
     water: 'water', steps: 'steps', fitness: 'fitness', reports: 'stats', achievements: 'achievements', focus: 'focus',
     friends: 'friends', social: 'leaderboard', community: 'community', explore: 'explore',
     profile: 'profile', settings: 'customize', more: 'more', smart: 'more',

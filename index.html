@@ -1425,6 +1425,16 @@
                     <div class="habit-list" id="tasksContent"></div>
                 </section>
             </div>
+            <!-- GOALS SECTION (below Tasks) -->
+            <div id="goalsSection" class="fx-adv" style="margin-top: 30px;">
+                <header class="top-header">
+                    <div>
+                        <h1>Goals</h1>
+                        <p>Set targets and watch them fill up</p>
+                    </div>
+                </header>
+                <div id="fx-goals-body"></div>
+            </div>
         </div>
 
         <!-- WATER PAGE -->
@@ -1993,7 +2003,7 @@
         function changePage(pageId, element) {
             if (typeof isUserAuthenticated === 'function' && !isUserAuthenticated()) { enforceAuthGate(); return; }
             closeMore();
-            if (pageId === 'tasks') pageId = 'habits'; // Tasks now live below Habits
+            if (pageId === 'tasks' || pageId === 'goals') pageId = 'habits'; // Tasks and Goals now live below Habits
             document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active'));
             document.getElementById(`page-${pageId}`).classList.add('active');
 

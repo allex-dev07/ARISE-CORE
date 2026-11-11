@@ -468,6 +468,7 @@ FX.goalAdd = function () {
 FX.goalDel = function (id) { confirmDo('Delete this goal?', () => { appState.goals = appState.goals.filter(g => g.id !== id); saveData(); renderGoals(); }, 'Delete'); };
 FX.goalBump = function (id, dlt) { const g = appState.goals.find(x => x.id === id); if (!g) return; g.val = Math.max(0, (Number(g.val) || 0) + dlt); saveData(); renderGoals(); };
 FX.pages.goals = renderGoals;
+FX.pages.habits = renderGoals; // Goals now live below Habits & Tasks
 
 /* ================= Focus Mode (block distractions, count times you leave, Reality XP) ================= */
 const FOCUS_KEY = 'fxFocusRun';
@@ -1995,7 +1996,6 @@ const NAV = [
     ['community', 'Community', '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>', false],
     ['reports', 'Progress', '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>', false],
     ['focus', 'Focus', '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>', true],
-    ['goals', 'Goals', '<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>', true],
     ['social', 'Share & Social', '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5a5 5 0 0 1 4.5 5"/>', true]
 ];
 function buildNav() { /* navigation is built by nav.js (single definition for sidebar, bottom bar and drawer) */ }
@@ -2019,7 +2019,6 @@ function buildPages() {
     makePage('fitness', 'Fitness Progress', 'Steps, water and activity over the last 7 days');
     makePage('more', 'More', 'Extra tools, help and app info');
     makePage('focus', 'Focus Mode', 'Block distractions and get deep work done');
-    makePage('goals', 'Goals', 'Set targets and watch them fill up');
     makePage('social', 'Share &amp; Social', 'Share progress, challenge friends, climb the leaderboard');
 }
 function wrap(name, after) {
@@ -2029,7 +2028,7 @@ function wrap(name, after) {
 wrap('updateUI', () => renderDash());
 wrap('updateUserGreeting', () => { applyGreetingName(); applyAvatar(); });
 wrap('saveData', () => { if (!inEval) scheduleEval(); });
-wrap('renderHabits', () => { renderEnergyNote(); renderStacks(); });
+wrap('renderHabits', () => { renderEnergyNote(); renderStacks(); const gb = byId('fx-goals-body'); if (gb && !gb.contains(document.activeElement)) renderGoals(); });
 wrap('renderHomeTasks', () => renderEnergyNote());
 wrap('changePage', id => { if (FX.pages[id]) FX.pages[id](); });
 wrap('renderPrefsPanels', () => enhancePrefs());
