@@ -126,3 +126,8 @@ html.fx-focusing .m-topbar, html.fx-focusing .nav-backdrop { display: none !impo
 .nv-card .t { font-weight: 700; font-size: 15px; }
 .nv-card .s { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
 @media (hover: none) { .nv-card:hover { transform: none; } }
+
+/* My Routine: quick jump chips to each section (Habits, Tasks, Goals, Skincare, Notes) */
+.rt-jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.rt-jump .quick-chip { cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: transparent; font: inherit; }
+@media (max-width: 768px) { .rt-jump { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; } .rt-jump .quick-chip { flex: 0 0 auto; } }

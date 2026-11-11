@@ -50,11 +50,7 @@ const IC = {
    adv    : hidden in Simple mode (same behaviour as before)                         */
 const TREE = [
     { key: 'dashboard', label: 'Dashboard', icon: 'dash', page: 'dashboard' },
-    { key: 'routine', label: 'My Routine', icon: 'routine', items: [
-        { key: 'habits', label: 'Habits', icon: 'habits', page: 'habits' },
-        { key: 'skincare', label: 'Skincare & To-Do', icon: 'skincare', page: 'skincare' },
-        { key: 'journal', label: 'Notes', icon: 'notes', page: 'journal' }
-    ] },
+    { key: 'routine', label: 'My Routine', icon: 'routine', page: 'habits' },
     { key: 'health', label: 'Health & Fitness', icon: 'health', items: [
         { key: 'water', label: 'Water Tracker', icon: 'water', page: 'water' },
         { key: 'steps', label: 'Steps Tracker', icon: 'steps', page: 'steps' },
@@ -85,7 +81,7 @@ const TREE = [
 
 /* page -> default highlighted entry (used when a page is opened from somewhere else in the app) */
 const PAGE_KEY = {
-    dashboard: 'dashboard', habits: 'habits', goals: 'habits', skincare: 'skincare', journal: 'journal',
+    dashboard: 'dashboard', habits: 'routine', goals: 'routine', skincare: 'routine', journal: 'routine',
     water: 'water', steps: 'steps', fitness: 'fitness', reports: 'stats', achievements: 'achievements', focus: 'focus',
     friends: 'friends', social: 'leaderboard', community: 'community', explore: 'explore',
     profile: 'profile', settings: 'customize', more: 'more', smart: 'more',
@@ -176,7 +172,9 @@ function closeDrawer() { document.body.classList.remove('nav-open'); const b = $
 
 /* ---------- navigation ---------- */
 let pendingKey = null;
+const ALIAS = { habits: 'habitsSection', tasks: 'tasksSection', goals: 'goalsSection', skincare: 'skincareSection', journal: 'notesSection' }; // old links now scroll inside My Routine
 function go(key) {
+    if (ALIAS[key] && !FLAT[key]) { const sec = ALIAS[key]; go('routine'); setTimeout(() => { const el = $(sec); if (el && el.offsetParent !== null) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120); return; }
     const it = FLAT[key]; if (!it) return;
     closeSheet(); closeDrawer();
     if (it.run) { const fn = actions[it.run]; if (fn) fn(); return; }
