@@ -592,23 +592,23 @@ function drawShareCard(cv) {
     const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#0a0a1a'); g.addColorStop(.55, '#14082b'); g.addColorStop(1, '#04101a');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
     const glow = (x, y, r, col) => { const rg = c.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = rg; c.fillRect(0, 0, W, H); };
-    glow(150, 150, 520, 'rgba(0,240,255,.22)'); glow(950, 1150, 560, 'rgba(176,38,255,.25)');
+    glow(150, 150, 520, hexA(accentColor(), .22)); glow(950, 1150, 560, hexA(accentColor(), .22));
     const info = getLevelInfo(appState.totalXp), streak = getCurrentStreak(), wp = weekPctNow();
-    c.fillStyle = '#00f0ff'; c.font = `800 44px ${F}`; c.fillText('ARISE CORE', 80, 120);
+    c.fillStyle = accentColor(); c.font = `800 44px ${F}`; c.fillText('ARISE CORE', 80, 120);
     c.fillStyle = '#9a9aa8'; c.font = `500 28px ${F}`; c.fillText('My progress', 80, 165);
     c.fillStyle = '#fff'; c.font = `700 74px ${F}`;
     let nm = viewerName(); while (c.measureText(nm).width > 900 && nm.length > 3) nm = nm.slice(0, -2);
     c.fillText(nm, 80, 300);
-    c.fillStyle = '#ffcc00'; c.font = `700 38px ${F}`; c.fillText(`Level ${info.level} · ${getRank(info.level)}`, 80, 356);
+    c.fillStyle = accentColor(); c.font = `700 38px ${F}`; c.fillText(`Level ${info.level} · ${getRank(info.level)}`, 80, 356);
     const box = (x, y, w, h, label, val, col) => { rr(c, x, y, w, h, 34); c.fillStyle = 'rgba(255,255,255,.06)'; c.fill(); c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 2; c.stroke(); c.fillStyle = '#9a9aa8'; c.font = `500 28px ${F}`; c.fillText(label, x + 36, y + 62); c.fillStyle = col; c.font = `800 92px ${F}`; c.fillText(String(val), x + 36, y + 170); };
-    box(80, 420, 450, 220, 'Day streak', streak, '#00ff88'); box(550, 420, 450, 220, 'This week', wp + '%', '#00f0ff');
-    box(80, 664, 450, 220, 'Total XP', (Number(appState.totalXp) || 0).toLocaleString('en-US'), '#ffcc00'); box(550, 664, 450, 220, 'Habits ticked', appState.habits.reduce((n, h) => n + Object.values(h.history).filter(v => v === true).length, 0).toLocaleString('en-US'), '#b026ff');
+    box(80, 420, 450, 220, 'Day streak', streak, accentColor()); box(550, 420, 450, 220, 'This week', wp + '%', accentColor());
+    box(80, 664, 450, 220, 'Total XP', (Number(appState.totalXp) || 0).toLocaleString('en-US'), accentColor()); box(550, 664, 450, 220, 'Habits ticked', appState.habits.reduce((n, h) => n + Object.values(h.history).filter(v => v === true).length, 0).toLocaleString('en-US'), accentColor());
     c.fillStyle = '#9a9aa8'; c.font = `500 28px ${F}`; c.fillText('Last 28 days', 80, 950);
     const days = lastDays(28), cs = 112, gp = 14;
     days.forEach((d, i) => {
         const col = i % 7, row = Math.floor(i / 7), s = dayStat(d);
         const a = s.rest || !s.sched ? 0.08 : s.pct >= 100 ? 1 : s.pct >= 70 ? .75 : s.pct >= 40 ? .5 : s.pct > 0 ? .3 : .08;
-        rr(c, 80 + col * (cs + gp), 975 + row * (62 + 10), cs, 62, 16); c.fillStyle = a <= .08 ? 'rgba(255,255,255,.07)' : `rgba(0,255,136,${a})`; c.fill();
+        rr(c, 80 + col * (cs + gp), 975 + row * (62 + 10), cs, 62, 16); c.fillStyle = a <= .08 ? 'rgba(255,255,255,.07)' : hexA(accentColor(), a); c.fill();
     });
     c.fillStyle = '#fff'; c.font = `700 36px ${F}`; c.fillText('Small steps. Big changes.', 80, 1290);
     c.fillStyle = '#9a9aa8'; c.font = `500 26px ${F}`; c.textAlign = 'right'; c.fillText(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 1000, 1290); c.textAlign = 'left';
@@ -1179,13 +1179,14 @@ function applyAvatar() {
         if (p.dp) { av.style.backgroundImage = `url("${p.dp}")`; av.style.backgroundSize = 'cover'; av.style.backgroundPosition = 'center'; av.textContent = ''; }
         else { av.style.backgroundImage = ''; av.textContent = nm.charAt(0).toUpperCase(); }
     });
-    const up = q('.user-profile'); if (up && !up.dataset.fxlink) { up.dataset.fxlink = '1'; up.style.cursor = 'pointer'; up.title = 'Open profile'; up.setAttribute('onclick', "FX.go('profile')"); }
+    const up = q('.user-profile'); if (up && !up.dataset.fxlink) { up.dataset.fxlink = '1'; up.style.cursor = 'pointer'; up.title = 'Open profile'; up.setAttribute('role', 'button'); up.setAttribute('tabindex', '0'); up.setAttribute('aria-label', 'Open profile'); up.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); FX.go('profile'); } }); up.setAttribute('onclick', "FX.go('profile')"); }
 }
 function applyGreetingName() {
     const n = PF().name; if (!n) return;
     const h = new Date().getHours(), g = h < 12 ? 'Good Morning' : h < 18 ? 'Good Afternoon' : 'Good Evening', gt = byId('greetingText');
-    if (gt) gt.innerText = `${g}, ${n}!`;
+    if (gt) setGreeting(g, n);
 }
+function hexA(hex, a) { const h = String(hex).replace('#', ''); const n = h.length === 3 ? h.split('').map(x => x + x).join('') : h; const r = parseInt(n.slice(0, 2), 16), g = parseInt(n.slice(2, 4), 16), b = parseInt(n.slice(4, 6), 16); return Number.isNaN(r + g + b) ? `rgba(0,240,255,${a})` : `rgba(${r},${g},${b},${a})`; }
 function memberSince() {
     try {
         const u = cloud && cloud.session && cloud.session.user;
@@ -1224,7 +1225,7 @@ function renderProfile() {
             <div class="fx-muted">${E(me ? me.email : 'Not logged in')}</div>
             <div class="fx-xp" style="margin:6px 0 12px;">Level ${info.level} &middot; ${E(getRank(info.level))}</div>
             <input type="file" id="fxPfFile" accept="image/*" style="display:none" onchange="FX.pfPhoto(this)">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-primary" onclick="document.getElementById('fxPfFile').click()">${p.dp ? 'Change photo' : 'Add photo'}</button><button class="btn-primary" onclick="FX.go('certs')">My certificates</button>${p.dp ? '<button class="btn-primary" style="background:transparent;border-color:var(--neon-red);color:var(--neon-red);" onclick="FX.pfRemovePhoto()">Remove</button>' : ''}</div></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-primary" onclick="document.getElementById('fxPfFile').click()">${p.dp ? 'Change photo' : 'Add photo'}</button>${p.dp ? '<button class="btn-primary" style="background:transparent;border-color:var(--neon-red);color:var(--neon-red);" onclick="FX.pfRemovePhoto()">Remove</button>' : ''}</div></div></div>
         ${p.bio ? `<div class="fx-note" style="font-size:14px;margin-top:14px;color:var(--text-main);">${E(p.bio)}</div>` : ''}</section>
     <section class="panel"><h2 class="panel-title" style="margin-bottom:12px;">Your details</h2>
         <div class="fx-form"><div class="input-group"><label>Display name</label><input type="text" id="fxPfName" maxlength="30" value="${E(p.name)}" placeholder="${E(authName() || 'Your name')}"></div>
@@ -1727,15 +1728,15 @@ function renderYear() {
 function drawYearCard(cv, y, s) {
     const W = 1080, H = 1350; cv.width = W; cv.height = H; const c = cv.getContext('2d'), F = 'system-ui, -apple-system, "Segoe UI", sans-serif';
     const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#0a0a1a'); g.addColorStop(.5, '#1a0b2e'); g.addColorStop(1, '#04141c'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-    c.fillStyle = '#00f0ff'; c.font = `800 44px ${F}`; c.fillText('ARISE CORE', 80, 120);
+    c.fillStyle = accentColor(); c.font = `800 44px ${F}`; c.fillText('ARISE CORE', 80, 120);
     c.fillStyle = '#fff'; c.font = `800 150px ${F}`; c.fillText(String(y), 80, 300); c.font = `700 52px ${F}`; c.fillText('Year in Review', 80, 370);
     c.fillStyle = '#9a9aa8'; c.font = `500 30px ${F}`; c.fillText(viewerName(), 80, 425);
     const box = (x, yy, w, h, label, val, col) => { rr(c, x, yy, w, h, 30); c.fillStyle = 'rgba(255,255,255,.06)'; c.fill(); c.fillStyle = '#9a9aa8'; c.font = `500 26px ${F}`; c.fillText(label, x + 30, yy + 50); c.fillStyle = col; c.font = `800 70px ${F}`; c.fillText(String(val), x + 30, yy + 130); };
-    box(80, 480, 450, 160, 'Habits ticked', fmtN(s.ticks), '#00ff88'); box(550, 480, 450, 160, 'Perfect days', s.perfect, '#ffcc00');
-    box(80, 660, 450, 160, 'Longest run (days)', s.best, '#00f0ff'); box(550, 660, 450, 160, 'Active days', s.active, '#b026ff');
+    box(80, 480, 450, 160, 'Habits ticked', fmtN(s.ticks), accentColor()); box(550, 480, 450, 160, 'Perfect days', s.perfect, accentColor());
+    box(80, 660, 450, 160, 'Longest run (days)', s.best, accentColor()); box(550, 660, 450, 160, 'Active days', s.active, accentColor());
     if (s.top) { c.fillStyle = '#9a9aa8'; c.font = `500 26px ${F}`; c.fillText('Top habit', 80, 880); c.fillStyle = '#fff'; c.font = `700 44px ${F}`; let t = s.top.name; while (c.measureText(t).width > 900 && t.length > 3) t = t.slice(0, -2); c.fillText(t, 80, 935); }
     const mx = Math.max(1, Math.max.apply(null, s.monthly));
-    s.monthly.forEach((v, i) => { const h = Math.max(6, v / mx * 220), x = 80 + i * 77; rr(c, x, 1240 - h, 56, h, 10); c.fillStyle = i === s.bestMonth ? '#00ff88' : 'rgba(0,240,255,.7)'; c.fill(); c.fillStyle = '#9a9aa8'; c.font = `500 22px ${F}`; c.textAlign = 'center'; c.fillText(MONTHS[i][0], x + 28, 1275); c.textAlign = 'left'; });
+    s.monthly.forEach((v, i) => { const h = Math.max(6, v / mx * 220), x = 80 + i * 77; rr(c, x, 1240 - h, 56, h, 10); c.fillStyle = i === s.bestMonth ? accentColor() : hexA(accentColor(), .7); c.fill(); c.fillStyle = '#9a9aa8'; c.font = `500 22px ${F}`; c.textAlign = 'center'; c.fillText(MONTHS[i][0], x + 28, 1275); c.textAlign = 'left'; });
 }
 FX.yrSet = v => { FX.yr.year = v; renderYear(); };
 FX.yrSave = () => { const cv = byId('fxYearCanvas'); if (cv) cardDownload(cv, `arise-core-year-${FX.yr.year}.png`); };

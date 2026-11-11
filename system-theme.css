@@ -14,7 +14,7 @@ html[data-ui="system"] {
     --glass-blur: blur(6px);
     --tint: 120, 190, 255;
     --text-main: #e8f4ff; --text-muted: #8fb4dd;
-    --neon-green: #35e0b0; --neon-yellow: #8fd3ff; --neon-red: #ff5d7a;
+    --neon-red: #ff5d7a;
     --border-color: rgba(56, 160, 255, .35);
     --sys-line: rgba(56, 160, 255, .6);
     --sys-glow: 0 0 14px rgba(40, 140, 255, .45);
