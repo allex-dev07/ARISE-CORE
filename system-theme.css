@@ -17,8 +17,8 @@ html[data-ui="system"] {
     --neon-red: #ff5d7a;
     --border-color: rgba(56, 160, 255, .35);
     --sys-line: rgba(56, 160, 255, .6);
-    --sys-glow: 0 0 14px rgba(40, 140, 255, .45);
-    --sh: 0 0 22px rgba(40, 140, 255, .28), inset 0 0 34px rgba(40, 140, 255, .07);
+    --sys-glow: 0 0 0 0 transparent;
+    --sh: none;
     --card-bg: linear-gradient(180deg, rgba(8, 30, 70, .78), rgba(3, 12, 34, .9));
     /* "NOTIFICATION" header strip shared by panels, toasts, modals */
     --sys-head: linear-gradient(90deg, rgba(40, 140, 255, .3), rgba(40, 140, 255, .04));
@@ -28,12 +28,9 @@ html[data-ui="system"] {
 html[data-ui="system"] body {
     background-color: var(--bg-base);
     background-image:
-        radial-gradient(ellipse at 50% -10%, rgba(30, 120, 255, .28), transparent 55%),
-        radial-gradient(circle at 92% 88%, rgba(110, 60, 255, .26), transparent 45%),
-        radial-gradient(circle at 6% 70%, rgba(110, 60, 255, .14), transparent 40%),
         linear-gradient(rgba(60, 150, 255, .05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(60, 150, 255, .05) 1px, transparent 1px);
-    background-size: auto, auto, auto, 44px 44px, 44px 44px;
+    background-size: 44px 44px, 44px 44px;
     background-attachment: fixed;
 }
 html[data-ui="system"] body::after { /* very faint scan-lines */
@@ -68,12 +65,12 @@ html[data-ui="system"] :is(.habit-row, .sound-row, .journal-entry, .level-card, 
 
 /* ---------- Titles: boxed "alert" icon + glowing text ---------- */
 html[data-ui="system"] .top-header h1 {
-    color: #fff; text-shadow: 0 0 18px rgba(40, 150, 255, .85);
+    color: #fff; text-shadow: none;
 }
 html[data-ui="system"] .panel-title {
     display: flex; width: fit-content; max-width: 100%; align-items: center; gap: 10px;
     padding: 5px 14px 5px 5px; font-size: 14px; letter-spacing: .14em;
-    color: #fff; text-shadow: 0 0 10px var(--neon-cyan);
+    color: #fff; text-shadow: none;
     border: 1px solid var(--sys-line); background: rgba(40, 140, 255, .1);
 }
 html[data-ui="system"] .panel-title::before { /* square icon box with a ringed "!" */
@@ -83,28 +80,28 @@ html[data-ui="system"] .panel-title::before { /* square icon box with a ringed "
     border: 1px solid var(--sys-line);
     background: radial-gradient(circle, transparent 7px, #fff 7px 8.2px, transparent 8.6px);
 }
-html[data-ui="system"] .stat-value { text-shadow: 0 0 14px currentColor; }
+html[data-ui="system"] .stat-value { text-shadow: none; }
 
 /* ---------- Navigation ---------- */
-html[data-ui="system"] .sidebar { border-color: var(--sys-line); box-shadow: 0 0 30px rgba(40, 140, 255, .2); }
+html[data-ui="system"] .sidebar { border-color: var(--sys-line); box-shadow: none; }
 html[data-ui="system"] .nav-item { letter-spacing: .05em; font-size: 14px; }
-html[data-ui="system"] .logo { text-shadow: 0 0 16px var(--neon-cyan); }
+html[data-ui="system"] .logo { text-shadow: none; }
 html[data-ui="system"] .nav-item:hover,
 html[data-ui="system"] .nav-item.active {
     background: linear-gradient(90deg, rgba(40, 140, 255, .28), transparent);
-    box-shadow: inset 0 0 18px rgba(40, 140, 255, .15);
+    box-shadow: none;
 }
-html[data-ui="system"] .nav-item.active { color: #fff; text-shadow: 0 0 10px var(--neon-cyan); }
-html[data-ui="system"] .mobile-nav { border-top: 1px solid var(--sys-line); box-shadow: 0 -6px 24px rgba(40, 140, 255, .2); }
-html[data-ui="system"] .mobile-nav-item.active { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); }
+html[data-ui="system"] .nav-item.active { color: #fff; text-shadow: none; }
+html[data-ui="system"] .mobile-nav { border-top: 1px solid var(--sys-line); box-shadow: none; }
+html[data-ui="system"] .mobile-nav-item.active { color: var(--neon-cyan); text-shadow: none; }
 
 /* ---------- Controls ---------- */
 html[data-ui="system"] .btn-primary {
     background: rgba(40, 140, 255, .14); border: 1px solid var(--neon-cyan);
-    color: #dff0ff; text-shadow: 0 0 8px var(--neon-cyan);
-    box-shadow: var(--sys-glow), inset 0 0 14px rgba(40, 140, 255, .18);
+    color: #dff0ff; text-shadow: none;
+    box-shadow: var(--sys-glow);
 }
-html[data-ui="system"] .btn-primary:hover { background: rgba(40, 140, 255, .32); box-shadow: 0 0 22px var(--neon-cyan); }
+html[data-ui="system"] .btn-primary:hover { background: rgba(40, 140, 255, .32); box-shadow: none; }
 html[data-ui="system"] :is(.tab-btn, .quick-chip, .mood-btn, .weekday-btn, .icon-btn) {
     background: rgba(40, 140, 255, .08); border: 1px solid var(--sys-line); color: #cfe6ff;
 }
@@ -118,7 +115,7 @@ html[data-ui="system"] :is(.input-group input, .input-group select, .input-group
     outline: none; box-shadow: 0 0 0 1px var(--neon-cyan), var(--sys-glow);
 }
 html[data-ui="system"] .custom-checkbox { border-color: var(--sys-line); }
-html[data-ui="system"] .custom-checkbox.checked { box-shadow: 0 0 12px var(--neon-green); }
+html[data-ui="system"] .custom-checkbox.checked { box-shadow: none; }
 
 /* ---------- Progress bars: glowing blue-to-violet fill ---------- */
 html[data-ui="system"] :is(.level-bar-container, .water-bar, .lv-bar, .badge-summary-bar, .badge-progress-bar) {
@@ -126,7 +123,7 @@ html[data-ui="system"] :is(.level-bar-container, .water-bar, .lv-bar, .badge-sum
 }
 html[data-ui="system"] :is(.level-bar-fill, #wBar, .badge-summary-fill) {
     background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); border-radius: 0;
-    box-shadow: 0 0 12px var(--neon-cyan);
+    box-shadow: none;
 }
 
 /* ---------- Toasts: a real "NOTIFICATION" window ---------- */
@@ -134,23 +131,23 @@ html[data-ui="system"] .notify {
     flex-wrap: wrap; gap: 10px 12px; padding: 0 38px 14px 14px;
     background: linear-gradient(180deg, rgba(6, 26, 64, .94), rgba(3, 10, 28, .96));
     border: 1px solid var(--sys-line); border-left: 1px solid var(--sys-line);
-    box-shadow: 0 0 24px rgba(40, 140, 255, .45), inset 0 0 28px rgba(40, 140, 255, .1);
+    box-shadow: none;
 }
 html[data-ui="system"] .notify::before {
     content: "! NOTIFICATION"; order: -1;
     flex: 0 0 calc(100% + 52px); margin: 0 -38px 0 -14px; padding: 8px 14px;
     font-size: 11px; font-weight: 700; letter-spacing: .22em;
-    color: #fff; text-shadow: 0 0 8px var(--neon-cyan);
+    color: #fff; text-shadow: none;
     background: var(--sys-head); border-bottom: 1px solid var(--sys-line);
 }
 html[data-ui="system"] .notify-icon { border-radius: 0; border: 1px solid var(--sys-line); }
-html[data-ui="system"] .notify-title { color: #fff; text-shadow: 0 0 8px rgba(40, 140, 255, .8); letter-spacing: .05em; }
+html[data-ui="system"] .notify-title { color: #fff; text-shadow: none; letter-spacing: .05em; }
 
 /* ---------- Level-up: "NOTIFICATION" window + big "LEVEL UP!" plate ---------- */
 html[data-ui="system"] .levelup-card::before {
     content: "! NOTIFICATION"; display: block; margin: -30px -30px 22px; padding: 10px 16px;
     font-size: 12px; font-weight: 700; letter-spacing: .26em; text-align: left;
-    color: #fff; text-shadow: 0 0 8px var(--neon-cyan);
+    color: #fff; text-shadow: none;
     background: var(--sys-head); border-bottom: 1px solid var(--sys-line);
 }
 html[data-ui="system"] .levelup-title { font-size: 0; letter-spacing: 0; } /* hide the default text ... */
@@ -158,13 +155,13 @@ html[data-ui="system"] .levelup-title::after { /* ... and show the System's word
     content: "LEVEL UP!"; display: inline-block; padding: 12px 24px;
     font-size: clamp(26px, 7vw, 38px); font-weight: 800; letter-spacing: .12em; color: #fff;
     border: 2px solid var(--neon-cyan); background: rgba(2, 10, 30, .75);
-    text-shadow: 0 0 18px var(--neon-cyan);
-    box-shadow: 0 0 26px rgba(40, 140, 255, .6), inset 0 0 22px rgba(40, 140, 255, .25);
+    text-shadow: none;
+    box-shadow: none;
     animation: sysPulse 2s ease-in-out infinite;
 }
-html[data-ui="system"] .levelup-badge { color: #fff; text-shadow: 0 0 20px var(--neon-cyan); }
+html[data-ui="system"] .levelup-badge { color: #fff; text-shadow: none; }
 @keyframes sysPulse {
-    50% { box-shadow: 0 0 40px rgba(40, 140, 255, .9), inset 0 0 30px rgba(40, 140, 255, .4); }
+    50% { box-shadow: none; }
 }
 @media (max-width: 480px) {
     html[data-ui="system"] .levelup-card::before { margin: -22px -22px 18px; } /* modal padding is 22px on phones */

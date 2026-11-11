@@ -592,7 +592,7 @@ function drawShareCard(cv) {
     const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#0a0a1a'); g.addColorStop(.55, '#14082b'); g.addColorStop(1, '#04101a');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
     const glow = (x, y, r, col) => { const rg = c.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = rg; c.fillRect(0, 0, W, H); };
-    glow(150, 150, 520, hexA(accentColor(), .22)); glow(950, 1150, 560, hexA(accentColor(), .22));
+    
     const info = getLevelInfo(appState.totalXp), streak = getCurrentStreak(), wp = weekPctNow();
     c.fillStyle = accentColor(); c.font = `800 44px ${F}`; c.fillText('ARISE CORE', 80, 120);
     c.fillStyle = '#9a9aa8'; c.font = `500 28px ${F}`; c.fillText('My progress', 80, 165);
