@@ -169,3 +169,34 @@ html[data-ui="system"] .levelup-badge { color: #fff; text-shadow: none; }
 @media (prefers-reduced-motion: reduce) {
     html[data-ui="system"] .levelup-title::after { animation: none; }
 }
+
+/* =====================================================================
+   SQUARE / RECTANGULAR UI (Solo Leveling System windows)
+   Sab kuch sharp corners wala: panels, buttons, inputs, checkboxes,
+   toggles, progress bars, avatars, toasts, modals, nav, scrollbars.
+   Doubled attribute selector = high specificity so it also beats the
+   older "border-radius: 50% !important" rules.
+   ===================================================================== */
+html[data-ui="system"][data-ui="system"] *,
+html[data-ui="system"][data-ui="system"] *::before,
+html[data-ui="system"][data-ui="system"] *::after {
+    border-radius: 0 !important;
+}
+html[data-ui="system"] {
+    --r: 0px; --rs: 0px; --rb: 0px; --rcb: 0px; --sbr: 0px;
+}
+/* scrollbars: flat rectangles */
+html[data-ui="system"] ::-webkit-scrollbar-thumb,
+html[data-ui="system"] ::-webkit-scrollbar-track { border-radius: 0 !important; }
+
+/* Round things become clean squares: DP / avatar on phone header */
+html[data-ui="system"] .top-header > .user-profile { aspect-ratio: 1; }
+
+/* Toggle switch: rectangular slider with a square knob */
+html[data-ui="system"] .switch-slider { border: 1px solid var(--sys-line); }
+html[data-ui="system"] .switch-slider::before { background: var(--neon-cyan); }
+
+/* Pills / tags / badges: rectangular plates with thin outline */
+html[data-ui="system"] :is(.pill, .journal-mood-tag, .habit-xp, .as-level, .bd-meta) {
+    border: 1px solid var(--sys-line);
+}
