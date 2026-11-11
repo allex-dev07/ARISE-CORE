@@ -51,23 +51,9 @@ const IC = {
 const TREE = [
     { key: 'dashboard', label: 'Dashboard', icon: 'dash', page: 'dashboard' },
     { key: 'routine', label: 'My Routine', icon: 'routine', page: 'habits' },
-    { key: 'health', label: 'Health & Fitness', icon: 'health', items: [
-        { key: 'water', label: 'Water Tracker', icon: 'water', page: 'water' },
-        { key: 'steps', label: 'Steps Tracker', icon: 'steps', page: 'steps' },
-        { key: 'fitness', label: 'Fitness Progress', icon: 'fitness', page: 'fitness' }
-    ] },
-    { key: 'progress', label: 'My Progress', icon: 'progress', items: [
-        { key: 'stats', label: 'Statistics', icon: 'stats', page: 'reports' },
-        { key: 'achievements', label: 'Achievements', icon: 'trophy', page: 'achievements' },
-        { key: 'focus', label: 'Focus Mode', icon: 'focus', page: 'focus', adv: true }
-    ] },
-    { key: 'social', label: 'Social', icon: 'social', items: [
-        { key: 'friends', label: 'Friends', icon: 'friends', page: 'friends' },
-        { key: 'requests', label: 'Friend Requests', icon: 'requests', page: 'friends', scroll: 'fxFrRequests' },
-        { key: 'leaderboard', label: 'Leaderboard', icon: 'board', page: 'social', adv: true, after: () => { if (window.FX && FX.sTab) FX.sTab('leaderboard'); } },
-        { key: 'community', label: 'Community', icon: 'community', page: 'community' },
-        { key: 'explore', label: 'Explore', icon: 'explore', page: 'explore' }
-    ] },
+    { key: 'health', label: 'Health & Fitness', icon: 'health', page: 'water' },
+    { key: 'progress', label: 'My Progress', icon: 'progress', page: 'reports' },
+    { key: 'social', label: 'Social', icon: 'social', page: 'friends' },
     { key: 'account', label: 'Account & Settings', icon: 'account', drawerOnly: true, items: [
         { key: 'profile', label: 'Profile', icon: 'account', page: 'profile' },
         { key: 'customize', label: 'Customize App', icon: 'customize', page: 'settings', scroll: 'appearancePanel' },
@@ -82,11 +68,11 @@ const TREE = [
 /* page -> default highlighted entry (used when a page is opened from somewhere else in the app) */
 const PAGE_KEY = {
     dashboard: 'dashboard', habits: 'routine', goals: 'routine', skincare: 'routine', journal: 'routine',
-    water: 'water', steps: 'steps', fitness: 'fitness', reports: 'stats', achievements: 'achievements', focus: 'focus',
-    friends: 'friends', social: 'leaderboard', community: 'community', explore: 'explore',
+    water: 'health', steps: 'health', fitness: 'health', reports: 'progress', achievements: 'progress', focus: 'progress',
+    friends: 'social', social: 'social', community: 'social', explore: 'social',
     profile: 'profile', settings: 'customize', more: 'more', smart: 'more',
-    pet: 'explore', logs: 'explore', coach: 'explore', garden: 'explore', calendar: 'explore', year: 'explore',
-    ramadan: 'explore', life: 'explore', certs: 'explore'
+    pet: 'social', logs: 'social', coach: 'social', garden: 'social', calendar: 'social', year: 'social',
+    ramadan: 'social', life: 'social', certs: 'social'
 };
 
 const FLAT = {}, GROUP_OF = {};
@@ -95,6 +81,66 @@ TREE.forEach(g => {
     (g.items || []).forEach(i => { FLAT[i.key] = i; GROUP_OF[i.key] = g.key; });
 });
 const BOTTOM = TREE.filter(g => !g.drawerOnly); // Dashboard, My Routine, Health & Fitness, My Progress, Social
+
+/* ---------- grouped pages: one nav item opens ONE page that stacks several sections ----------
+   My Routine is merged in index.html. Health, Progress and Social stack the existing pages
+   (each keeps its own id + render code) under one title bar with jump chips. */
+const GROUPS = {
+    health: { title: 'Health & Fitness', sub: 'Water, steps and fitness progress in one place', secs: [
+        { page: 'water', label: 'Water Tracker' }, { page: 'steps', label: 'Steps Tracker' }, { page: 'fitness', label: 'Fitness Progress' }] },
+    progress: { title: 'My Progress', sub: 'Statistics, achievements and focus mode in one place', secs: [
+        { page: 'reports', label: 'Statistics' }, { page: 'achievements', label: 'Achievements' }, { page: 'focus', label: 'Focus Mode', adv: true }] },
+    social: { title: 'Social', sub: 'Friends, requests, leaderboard, community and explore in one place', secs: [
+        { page: 'friends', label: 'Friends' }, { page: 'friends', label: 'Friend Requests', el: 'fxFrRequests' }, { page: 'social', label: 'Leaderboard' },
+        { page: 'community', label: 'Community' }, { page: 'explore', label: 'Explore' }] }
+};
+const PAGE_GROUP = {}, GROUP_PAGES = {};
+Object.keys(GROUPS).forEach(k => {
+    GROUP_PAGES[k] = [];
+    GROUPS[k].secs.forEach(sc => { if (!GROUP_PAGES[k].includes(sc.page)) GROUP_PAGES[k].push(sc.page); PAGE_GROUP[sc.page] = k; });
+});
+/* old nav keys still used by links, search and other code: key -> [group, element id to scroll to] */
+const ALIAS = {
+    habits: ['routine', 'habitsSection'], tasks: ['routine', 'tasksSection'], goals: ['routine', 'goalsSection'], skincare: ['routine', 'skincareSection'], journal: ['routine', 'notesSection'],
+    water: ['health', 'page-water'], steps: ['health', 'page-steps'], fitness: ['health', 'page-fitness'],
+    stats: ['progress', 'page-reports'], achievements: ['progress', 'page-achievements'], focus: ['progress', 'page-focus'],
+    friends: ['social', 'page-friends'], requests: ['social', 'fxFrRequests'], leaderboard: ['social', 'page-social'], community: ['social', 'page-community'], explore: ['social', 'page-explore']
+};
+const SEC_LABELS = { habits: 'Habits', tasks: 'Tasks', goals: 'Goals', skincare: 'Skincare & To-Do', journal: 'Notes', water: 'Water Tracker', steps: 'Steps Tracker', fitness: 'Fitness Progress', stats: 'Statistics', achievements: 'Achievements', focus: 'Focus Mode', friends: 'Friends', requests: 'Friend Requests', leaderboard: 'Leaderboard', community: 'Community', explore: 'Explore' };
+
+function jumpTo(id, tries) {
+    const el = $(id);
+    if (el && el.offsetParent !== null) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else if ((tries || 0) < 6) setTimeout(() => jumpTo(id, (tries || 0) + 1), 120);
+}
+function setupGroup(k) {
+    const g = GROUPS[k], ids = GROUP_PAGES[k], els = ids.map(id => $('page-' + id));
+    if (els.some(e => !e)) return false;
+    if (!els[0].dataset.grp) {
+        for (let i = 1; i < els.length; i++) { els[i - 1].parentNode.insertBefore(els[i], els[i - 1].nextSibling); els[i].classList.add('grp-sib'); }
+        els.forEach(e => { e.dataset.grp = k; });
+        const focus = $('page-focus'); if (focus) focus.classList.add('fx-adv');
+        const bar = document.createElement('div'); bar.className = 'grp-bar'; bar.id = 'grpbar-' + k;
+        bar.innerHTML = `<header class="top-header"><div><h1>${g.title}</h1><p>${g.sub}</p></div></header><div class="rt-jump">${g.secs.map(sc => `<button type="button" class="quick-chip${sc.adv ? ' fx-adv' : ''}" data-jump="${sc.el || 'page-' + sc.page}">${sc.label}</button>`).join('')}</div>`;
+        bar.addEventListener('click', e => { const b = e.target.closest('[data-jump]'); if (b) jumpTo(b.dataset.jump); });
+        els[0].insertBefore(bar, els[0].firstChild);
+    }
+    return true;
+}
+function renderSibling(id) {
+    try {
+        if (id === 'water' && typeof renderWaterAll === 'function') renderWaterAll();
+        else if (id === 'social' && window.FX && FX.sTab) FX.sTab('leaderboard');
+        else if (id === 'achievements' && typeof renderBadges === 'function') renderBadges();
+        else if (window.FX && FX.pages && FX.pages[id]) FX.pages[id]();
+    } catch (e) {}
+}
+function openGroup(pageId) {
+    const k = PAGE_GROUP[pageId]; if (!k || !setupGroup(k)) return;
+    const target = $('page-' + pageId); if (!target || !target.classList.contains('active')) return;
+    GROUP_PAGES[k].forEach(id => { if (id === pageId) return; const e = $('page-' + id); if (e) { e.classList.add('active'); renderSibling(id); } });
+    if (pageId !== GROUP_PAGES[k][0]) setTimeout(() => jumpTo('page-' + pageId), 80);
+}
 
 /* ---------- actions that are not pages ---------- */
 const actions = {
@@ -172,9 +218,8 @@ function closeDrawer() { document.body.classList.remove('nav-open'); const b = $
 
 /* ---------- navigation ---------- */
 let pendingKey = null;
-const ALIAS = { habits: 'habitsSection', tasks: 'tasksSection', goals: 'goalsSection', skincare: 'skincareSection', journal: 'notesSection' }; // old links now scroll inside My Routine
 function go(key) {
-    if (ALIAS[key] && !FLAT[key]) { const sec = ALIAS[key]; go('routine'); setTimeout(() => { const el = $(sec); if (el && el.offsetParent !== null) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120); return; }
+    if (ALIAS[key] && !FLAT[key]) { const a = ALIAS[key]; go(a[0]); setTimeout(() => jumpTo(a[1]), 150); return; }
     const it = FLAT[key]; if (!it) return;
     closeSheet(); closeDrawer();
     if (it.run) { const fn = actions[it.run]; if (fn) fn(); return; }
@@ -225,7 +270,10 @@ function pageMatches(text) {
             if (it.label.toLowerCase().includes(t)) out.push({ type: 'Page', text: it.label + (g.items ? ' · ' + parent : ''), nav: it.key });
         });
     });
-    return out.slice(0, 4);
+    Object.keys(SEC_LABELS).forEach(k => {
+        if (SEC_LABELS[k].toLowerCase().includes(t) && ALIAS[k] && FLAT[ALIAS[k][0]]) out.push({ type: 'Page', text: SEC_LABELS[k] + ' · ' + FLAT[ALIAS[k][0]].label, nav: k });
+    });
+    return out.slice(0, 5);
 }
 function dashSearch(v) {
     const box = $('dashSearchResults'); if (!box) return;
@@ -250,7 +298,7 @@ function focusSearch() {
 function wire() {
     const orig = window.changePage;
     if (typeof orig === 'function' && !orig.__navWrapped) {
-        const wrapped = function () { const r = orig.apply(this, arguments); try { syncActive(); clearDashSearch(); } catch (e) {} return r; };
+        const wrapped = function (pageId) { const r = orig.apply(this, arguments); try { openGroup(pageId); syncActive(); clearDashSearch(); } catch (e) {} return r; };
         wrapped.__navWrapped = true; window.changePage = wrapped;
     }
     document.addEventListener('click', e => { const s = $('dashSearch'); if (s && !s.contains(e.target)) { const b = $('dashSearchResults'); if (b) b.hidden = true; } });
@@ -259,7 +307,7 @@ function wire() {
     });
     window.addEventListener('resize', () => { if (window.innerWidth > 768) { closeDrawer(); closeSheet(); } });
     // old helpers that other code may still call
-    window.toggleMore = () => openSheet('social');
+    window.toggleMore = openDrawer;
     window.closeMore = closeSheet;
 }
 

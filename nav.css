@@ -131,3 +131,8 @@ html.fx-focusing .m-topbar, html.fx-focusing .nav-backdrop { display: none !impo
 .rt-jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
 .rt-jump .quick-chip { cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: transparent; font: inherit; }
 @media (max-width: 768px) { .rt-jump { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; } .rt-jump .quick-chip { flex: 0 0 auto; } }
+
+/* grouped pages (Health, Progress, Social): sections stacked under one title bar */
+.grp-bar { margin-bottom: 4px; }
+.grp-bar .top-header { margin-bottom: 14px; }
+.page-section.grp-sib.active { margin-top: 30px; }
