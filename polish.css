@@ -51,7 +51,7 @@ input, textarea, select { font-weight: var(--fw-normal); }
 .main-content { gap: var(--sp-section); padding-top: clamp(20px, 3vw, 32px); padding-bottom: 100px; }
 .page-section.active { gap: var(--sp-section); }
 .top-header { margin-bottom: 0; align-items: center; }
-.top-header > div { display: flex; flex-direction: column; gap: 2px; }
+.top-header > div:first-child { display: flex; flex-direction: column; gap: 2px; }
 .panel, .calendar-section { padding: var(--sp-panel); border-radius: 22px; }
 .panel-header { margin-bottom: var(--sp-3); gap: var(--sp-2) var(--sp-3); }
 .panel-title { line-height: 1.3; }
@@ -101,8 +101,10 @@ input, textarea, select { font-weight: var(--fw-normal); }
 
 /* ---------- 5. FIXES FOUND WHILE TESTING ---------- */
 /* user pill in the header must stay a horizontal pill */
-.top-header > .user-profile { flex-direction: row; gap: 12px; padding: 8px 18px 8px 8px; flex-shrink: 0; }
-.top-header > .user-profile > div:last-child { display: flex; flex-direction: column; gap: 0; line-height: 1.25; }
+@media (min-width: 769px) {
+    .top-header > .user-profile { flex-shrink: 0; }
+    .top-header > .user-profile > div:not(.avatar) { line-height: 1.25; }
+}
 .user-profile .avatar { flex-shrink: 0; }
 .stat-card { min-height: 0; }
 
@@ -147,6 +149,29 @@ input, textarea, select { font-weight: var(--fw-normal); }
 .level-bar-container + div:not([id*="Pct"]):not(.keep)[style*="font-size: 11px"] { display: none !important; }
 
 /* a hidden subtitle must not leave a gap behind the title */
-.top-header > div { gap: 0; }
+.top-header > div:first-child { gap: 0; }
 .panel-title { margin-bottom: 0; }
 .panel > .panel-title + * { margin-top: var(--sp-3); }
+
+/* ---------- 7. Top bar (app name + search) and jump chips scroll WITH the page ---------- */
+.rt-jump, .grp-chips { position: static !important; top: auto !important; z-index: auto; }
+@media (max-width: 768px) {
+    .m-topbar { position: absolute !important; }
+    .rt-jump, .grp-chips { background: transparent; }
+    #tasksSection, #goalsSection, #skincareSection, #notesSection, .page-section[data-grp] { scroll-margin-top: 16px; }
+}
+
+/* ---------- 8. SECOND SWEEP: remaining description lines across the whole app ---------- */
+#levelInfoText, #progressMessage, #wMsg:not([style*="red"]):not([style*="yellow"]),
+span.d,
+.habit-info p > span:not(.task-tag):not(.habit-xp),
+.fx-insight .s,
+#page-explore .fx-row > .grow > .s,
+#bootBanners .bd-banner-text,
+.bd-hero-text, .bd-desc, .bd-meta, .lv-xp,
+.as-sub, .as-note, .as-state,
+.fx-muted.fx-hint, .fx-sub { display: none !important; }
+.habit-info p:empty, .fx-insight .t { margin: 0; }
+.bd-banner-text, .bd-hero-label,
+.panel-header > span[style*="neon-yellow"] { display: none !important; }
+#demoBanner .bd-banner-text, [id*="emo"] .bd-banner-text { display: block !important; }
