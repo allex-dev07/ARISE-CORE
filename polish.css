@@ -229,3 +229,9 @@ span.d,
     .workspace, .ws-col { gap: 24px !important; }
     .page-section .panel { margin-top: 0; margin-bottom: 0; }
 }
+
+/* ---------- 11. No top bar inside pages (logo + search only on the outer/dashboard screen) ---------- */
+.m-topbar { display: none !important; }
+@media (max-width: 768px) {
+    body:not([data-page="dashboard"]) .main-content { padding-top: calc(20px + env(safe-area-inset-top)) !important; }
+}
