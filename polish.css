@@ -175,3 +175,57 @@ span.d,
 .bd-banner-text, .bd-hero-label,
 .panel-header > span[style*="neon-yellow"] { display: none !important; }
 #demoBanner .bd-banner-text, [id*="emo"] .bd-banner-text { display: block !important; }
+
+/* ---------- 9. Top bar blends into the app + even spacing on My Routine ---------- */
+@media (max-width: 768px) {
+    /* top bar: no separate strip, same background as the page, scrolls with it */
+    .m-topbar { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+        border-bottom: 0 !important; padding-top: calc(12px + env(safe-area-inset-top)) !important; padding-bottom: 0 !important; }
+    .m-topbar .mt-brand { font-size: var(--fs-section, 20px); font-weight: 800; letter-spacing: -.01em; }
+    .m-topbar .mt-btn { width: 40px; height: 40px; border-radius: 14px; background: var(--sidebar-bg); }
+    body:not([data-page="dashboard"]) .main-content { padding-top: calc(64px + env(safe-area-inset-top)) !important; }
+}
+
+/* My Routine: one rhythm. Block gap = 24px, heading -> card gap = 14px */
+#page-habits.active { gap: 24px; }
+#habitsSection, #tasksSection, #goalsSection, #skincareSection, #notesSection {
+    display: flex !important; flex-direction: column; gap: var(--sp-3); margin-top: 0 !important; }
+#habitsSection > .top-header, #tasksSection > .top-header, #goalsSection > .top-header,
+#skincareSection > .top-header, #notesSection > .top-header { margin: 0 !important; }
+#page-habits .panel-header { margin-bottom: var(--sp-3); }
+.task-tabs { margin-bottom: var(--sp-3); }
+.task-tabs:last-child, #tasksContent:empty { margin-bottom: 0; }
+#tasksContent:empty { display: none; }
+/* empty helper blocks must not add an extra gap between sections */
+#page-habits > :empty { display: none !important; }
+
+/* ---------- 10. ONE spacing rhythm for the whole app ----------
+   24px between blocks / pages in a group, 14px between a heading and its card and between cards in a grid */
+:root { --sp-block: 24px; --sp-inner: 14px; }
+.main-content { gap: var(--sp-block) !important; }
+.page-section.active, .page-section[data-grp].active, #page-habits.active { gap: var(--sp-block) !important; }
+.main-content > .page-section.grp-sib, .page-section.grp-sib.active { margin-top: 0 !important; }
+.grp-head { margin: 0; }
+.rt-jump, .grp-chips { padding: 0 !important; margin: 0; }
+/* empty helper blocks never add a gap */
+.page-section > :empty, .main-content > :empty { display: none !important; }
+/* inline 25/30px margins on page blocks are replaced by the rhythm */
+.page-section > [style*="margin-top"], .page-section > [style*="margin-bottom"],
+.page-section > .panel, .page-section > section, [id$="Section"] > .panel, [id$="Section"] > section { margin-top: 0 !important; margin-bottom: 0 !important; }
+/* any block that is "heading + card(s)" keeps heading close to its card */
+.page-section > [id$="Section"], .page-section > .workspace { display: flex; flex-direction: column; gap: var(--sp-inner); }
+.page-section > [id$="Section"] > .top-header, .page-section > .workspace > .top-header { margin: 0 !important; }
+/* cards side by side / stacked inside grids */
+.stats-grid, .skin-grid, .water-layout, .workspace { gap: var(--sp-inner); }
+@media (min-width: 769px) { .workspace, .stats-grid, .skin-grid, .water-layout { gap: var(--sp-block); } }
+.panel-header { margin-bottom: var(--sp-inner); }
+
+/* ---------- 10. Same rhythm on every page: 24px between blocks ---------- */
+.page-section.active { gap: 24px; }
+.page-section > :empty { display: none !important; }
+[id^="fx-"][id$="-body"] { display: flex; flex-direction: column; gap: 24px; }
+[id^="fx-"][id$="-body"] > * { margin-top: 0 !important; margin-bottom: 0 !important; }
+@media (max-width: 768px) {
+    .workspace, .ws-col { gap: 24px !important; }
+    .page-section .panel { margin-top: 0; margin-bottom: 0; }
+}

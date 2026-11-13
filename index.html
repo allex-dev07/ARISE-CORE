@@ -1102,82 +1102,68 @@
     <noscript><div style="padding:40px;text-align:center;font-family:system-ui,sans-serif;">ARISE CORE needs JavaScript. Please turn it on in your browser settings.</div></noscript>
     <div id="bootLoader" role="status" aria-live="polite" aria-label="Loading ARISE CORE">
         <div class="bl-center">
-            <div class="bl-bolt"><i class="bl-dot" style="--sx:-120px;--sy:-260px;--ex:50px;--ey:0px;--d:0.00s"></i><i class="bl-dot" style="--sx:-60px;--sy:-300px;--ex:35px;--ey:35px;--d:0.05s"></i><i class="bl-dot" style="--sx:0px;--sy:-280px;--ex:0px;--ey:50px;--d:0.10s"></i><i class="bl-dot" style="--sx:70px;--sy:-310px;--ex:-35px;--ey:35px;--d:0.15s"></i><i class="bl-dot" style="--sx:130px;--sy:-270px;--ex:-50px;--ey:0px;--d:0.20s"></i><i class="bl-dot" style="--sx:-150px;--sy:-200px;--ex:-35px;--ey:-35px;--d:0.25s"></i><i class="bl-dot" style="--sx:150px;--sy:-210px;--ex:0px;--ey:-50px;--d:0.30s"></i><i class="bl-dot" style="--sx:20px;--sy:-240px;--ex:35px;--ey:-35px;--d:0.35s"></i><i class="bl-disc"></i><svg viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="blBoltClip"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></clipPath></defs><polygon class="bl-base" points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/><g clip-path="url(#blBoltClip)"><g class="bl-level" id="blLevel" style="transform:translateY(22px)"><path class="bl-wave2" d="M-12 0 q3 -.9 6 0 t6 0 t6 0 t6 0 t6 0 t6 0 t6 0 t6 0 V30 H-12 Z"/><path class="bl-wave1" d="M-12 0 q3 .9 6 0 t6 0 t6 0 t6 0 t6 0 t6 0 t6 0 t6 0 V30 H-12 Z"/></g></g><polygon class="bl-outline" points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+            <div class="bl-ring">
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                    <circle class="bl-track" cx="60" cy="60" r="54"/>
+                    <circle class="bl-prog" id="blRing" cx="60" cy="60" r="54" transform="rotate(-90 60 60)"/>
+                    <polygon class="bl-bolt" points="64 30 44 64 59 64 56 90 76 56 61 56 64 30"/>
+                </svg>
+            </div>
             <div class="bl-title"><span style="--i:0">A</span><span style="--i:1">R</span><span style="--i:2">I</span><span style="--i:3">S</span><span style="--i:4">E</span><span style="--i:5">&nbsp;</span><span style="--i:6">C</span><span style="--i:7">O</span><span style="--i:8">R</span><span style="--i:9">E</span></div>
+            <div class="bl-xp bl-fade"><div class="bl-xpfill" id="blBar"></div></div>
             <div class="bl-pct bl-fade" id="blPct">0%</div>
-            <div class="bl-status bl-fade" id="blStatus">Starting up...</div>
-            <div class="bl-tip bl-fade" id="blTip"></div>
+            <div class="bl-quote" id="blTip">You do not need motivation. You need a system.</div>
         </div>
     </div>
     <style>
-        #bootLoader{position:fixed;inset:0;z-index:9000;background-color:var(--bg-base);background-image: none;color:var(--text-main);display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden;transition:opacity .45s ease,transform .45s ease;padding:24px;box-sizing:border-box}
+        #bootLoader{position:fixed;inset:0;z-index:9000;background-color:var(--bg-base);background-image:none;color:var(--text-main);display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden;transition:opacity .45s ease,transform .45s ease;padding:24px;box-sizing:border-box}
         #bootLoader.bl-out{opacity:0;transform:scale(1.04);pointer-events:none}
-        .bl-center{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;max-width:340px;width:100%}
-        .bl-bolt{position:relative;width:128px;height:128px;margin-bottom:4px}
-        .bl-bolt::before{content:'';position:absolute;inset:0;border-radius:50%;background:none;opacity:0;animation:blPulse 2.4s ease-in-out infinite}
-        .bl-bolt svg{position:relative;width:100%;height:100%;overflow:visible;animation:blBoltIn .5s cubic-bezier(.2,.9,.3,1.3) 1.2s backwards}
-        .bl-base{fill:rgba(128,128,128,.14)}
-        .bl-outline{fill:none;stroke:var(--neon-cyan);stroke-width:1.3;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:70;filter:none;animation:blDraw .7s ease 1.2s backwards}
-        .bl-wave1{fill:var(--neon-cyan);animation:blWave 3.6s linear infinite reverse}
-        .bl-wave2{fill:var(--neon-cyan);opacity:.5;animation:blWave 5.6s linear infinite}
-        .bl-dot{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--neon-cyan);animation:blDot 1.4s cubic-bezier(.3,.7,.3,1) var(--d) both;z-index:2}
-        .bl-disc{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:var(--neon-cyan);animation:blDisc 1.1s ease .95s both;z-index:1}
-        .bl-title{font-size:20px;font-weight:800;letter-spacing:.28em;padding-left:.28em}
-        .bl-title span{display:inline-block;animation:blLetter .5s ease calc(1.7s + var(--i)*.045s) backwards}
-        .bl-pct{font-size:34px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--text-main)}
-        .bl-status{font-size:13px;color:var(--text-muted);min-height:18px;letter-spacing:.02em}
-        .bl-tip{margin-top:8px;font-size:14px;line-height:1.5;min-height:42px;padding:10px 14px;border-radius:14px;background:rgba(128,128,128,.10);border:1px solid rgba(128,128,128,.16);transition:opacity .35s ease;width:100%;box-sizing:border-box}
-        .bl-tip.bl-hide{opacity:0}
-        .bl-fade{animation:blFade .5s ease 1.9s backwards}
+        .bl-center{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;max-width:300px;width:100%}
+        .bl-ring{width:132px;height:132px;margin-bottom:6px;animation:blRingIn .6s cubic-bezier(.2,.9,.3,1.2) backwards}
+        .bl-ring svg{width:100%;height:100%;overflow:visible}
+        .bl-track{fill:none;stroke:rgba(128,128,128,.22);stroke-width:5}
+        .bl-prog{fill:none;stroke:var(--neon-cyan);stroke-width:5;stroke-linecap:round;stroke-dasharray:339.29;stroke-dashoffset:339.29;filter:drop-shadow(0 0 6px var(--neon-cyan)) drop-shadow(0 0 14px var(--neon-cyan))}
+        .bl-bolt{fill:var(--neon-cyan);transform-origin:60px 60px;animation:blPulse 2.2s ease-in-out infinite;filter:drop-shadow(0 0 4px var(--neon-cyan))}
+        .bl-title{font-size:18px;font-weight:800;letter-spacing:.3em;padding-left:.3em}
+        .bl-title span{display:inline-block;animation:blLetter .5s ease calc(.5s + var(--i)*.045s) backwards}
+        .bl-xp{width:200px;height:7px;border-radius:99px;background:rgba(128,128,128,.22);overflow:hidden;margin-top:4px}
+        .bl-xpfill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--neon-cyan),#7c5cff);box-shadow:0 0 10px rgba(0,240,255,.45)}
+        .bl-pct{font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums;letter-spacing:.04em;margin-top:-4px}
+        .bl-quote{margin-top:14px;font-size:13px;line-height:1.55;color:var(--text-muted);max-width:240px;opacity:0;animation:blQuote 1.8s ease 2s forwards}
+        .bl-fade{animation:blFade .5s ease .9s backwards}
         .bl-retry{margin-top:6px;padding:10px 22px;border-radius:12px;border:1px solid var(--neon-cyan);background:transparent;color:var(--neon-cyan);font-size:14px;font-weight:600;cursor:pointer}
-        #bootLoader.bl-quick .bl-dot,#bootLoader.bl-quick .bl-disc{display:none}
-        #bootLoader.bl-quick .bl-bolt svg,#bootLoader.bl-quick .bl-outline,#bootLoader.bl-quick .bl-title span,#bootLoader.bl-quick .bl-fade{animation:none}
-        @keyframes blDot{0%{transform:translate(var(--sx),var(--sy)) scale(.6);opacity:0}15%{opacity:1}55%{transform:translate(var(--ex),var(--ey)) scale(1);opacity:1}70%{transform:translate(var(--ex),var(--ey)) scale(1);opacity:1}100%{transform:translate(0,0) scale(.4);opacity:0}}
-        @keyframes blDisc{0%{transform:scale(0);opacity:1}35%{transform:scale(1.15)}55%{transform:scale(1);opacity:1}100%{transform:scale(2);opacity:0}}
-        @keyframes blBoltIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
-        @keyframes blDraw{from{stroke-dashoffset:70}to{stroke-dashoffset:0}}
+        #bootLoader.bl-quick .bl-ring,#bootLoader.bl-quick .bl-title span,#bootLoader.bl-quick .bl-fade{animation:none}
+        #bootLoader.bl-quick .bl-quote{animation-duration:.8s;animation-delay:.3s}
+        @keyframes blRingIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
         @keyframes blLetter{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
         @keyframes blFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-        @keyframes blWave{from{transform:translateX(0)}to{transform:translateX(-12px)}}
+        @keyframes blQuote{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes blPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-        @media (prefers-reduced-motion:reduce){#bootLoader *,#bootLoader *::before{animation:none!important}#bootLoader,.bl-tip{transition:none!important}.bl-dot,.bl-disc{display:none}}
+        @media (prefers-reduced-motion:reduce){#bootLoader *{animation:none!important}.bl-quote{opacity:1}#bootLoader{transition:none!important}}
     </style>
     <script>
     (function(){
         var quick=false;
         try{quick=sessionStorage.getItem('ariseIntro')==='1'||(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);sessionStorage.setItem('ariseIntro','1');}catch(e){}
         if(quick)document.getElementById('bootLoader').classList.add('bl-quick');
-        var tips=[
-            '🔥 Small habits, done daily, beat big plans done once.',
-            '⚡ Every habit you complete earns XP. Level up your life!',
-            '💧 Tip: Log your water to hit your daily goal.',
-            '🎯 Never miss twice. One slip is fine, two starts a new habit.',
-            '🧘 Try a Focus session today. Even 10 minutes counts.',
-            '📈 Your streak grows one day at a time. Protect it!',
-            '🌟 You do not need motivation. You need a system.',
-            '📝 Tip: Jot a quick note, your future self will thank you.'
-        ], steps=[[0,'Starting up...'],[30,'Loading your habits...'],[60,'Syncing your progress...'],[85,'Almost there...']];
-        var tipEl=document.getElementById('blTip'),pctEl=document.getElementById('blPct'),stEl=document.getElementById('blStatus'),lvl=document.getElementById('blLevel');
-        var ti=Math.floor(Math.random()*tips.length),shown=0,cap=35,done=false,closing=false,lastQ=-1,t0=Date.now(),intro=quick?0:1800;
-        tipEl.textContent=tips[ti];
+        var pctEl=document.getElementById('blPct'),ring=document.getElementById('blRing'),bar=document.getElementById('blBar'),C=339.29;
+        var shown=0,cap=35,done=false,closing=false,lastQ=-1,t0=Date.now(),intro=quick?0:900;
         function paint(){
             var q=Math.round(shown);
-            lvl.style.transform='translateY('+(22-20*shown/100).toFixed(2)+'px)';
+            ring.style.strokeDashoffset=(C*(1-shown/100)).toFixed(2);
+            bar.style.width=shown.toFixed(1)+'%';
             if(q===lastQ)return;lastQ=q;pctEl.textContent=q+'%';
-            if(q>=100){stEl.textContent='Ready!';return;}
-            var s=steps[0][1];for(var k=0;k<steps.length;k++){if(q>=steps[k][0])s=steps[k][1];}
-            stEl.textContent=s;
         }
-        var tipTimer=setInterval(function(){tipEl.classList.add('bl-hide');setTimeout(function(){ti=(ti+1)%tips.length;tipEl.textContent=tips[ti];tipEl.classList.remove('bl-hide');},350);},3200);
         var loop=setInterval(function(){
             if(Date.now()-t0<intro)return;
             shown+= done ? (100-shown)*0.22+0.4 : (cap-shown)*0.03;
             if(shown>100)shown=100;
             paint();
-            if(done&&shown>=100&&!closing){closing=true;clearInterval(loop);clearInterval(tipTimer);CLOSE();}
+            if(done&&shown>=100&&!closing){closing=true;clearInterval(loop);CLOSE();}
         },50);
         function CLOSE(){
-            var wait=Math.max(0,(quick?900:2900)-(Date.now()-t0));
+            // keep the loader long enough for the quote to fade in and be read
+            var wait=Math.max(0,(quick?900:4200)-(Date.now()-t0));
             setTimeout(function(){var l=document.getElementById('bootLoader');if(!l)return;l.classList.add('bl-out');setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l);},480);},wait);
         }
         if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){cap=Math.max(cap,65);});else cap=65;
@@ -1185,7 +1171,7 @@
         window.bootLoaderDone=function(){done=true;};
         setTimeout(function(){
             if(done)return;
-            clearInterval(loop);clearInterval(tipTimer);
+            clearInterval(loop);
             var c=document.querySelector('#bootLoader .bl-center');
             if(c)c.innerHTML='<div style="font-size:42px">\u26A0\uFE0F</div><div style="font-size:16px;line-height:1.5">ARISE CORE could not start.<br><span style="color:var(--text-muted);font-size:13px">Please refresh. Your data is safe on this device.</span></div><button class="bl-retry" onclick="location.reload()">Retry</button>';
         },10000);
