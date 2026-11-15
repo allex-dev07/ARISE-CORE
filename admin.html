@@ -159,11 +159,11 @@ async function logout(msg) {
 }
 
 // ---------- navigation ----------
-const TABS = [['dashboard', 'Dashboard'], ['users', 'Users'], ['announcements', 'Announcements'], ['settings', 'App settings'], ['codes', 'Premium codes'], ['feedback', 'Feedback'], ['log', 'Audit log']];
+const TABS = [['dashboard', 'Dashboard'], ['users', 'Users'], ['announcements', 'Announcements'], ['settings', 'App settings'], ['ads', 'Ads'], ['codes', 'Premium codes'], ['feedback', 'Feedback'], ['log', 'Audit log']];
 function renderNav() { $('nav').innerHTML = TABS.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" onclick="go('${k}')">${l}</button>`).join(''); }
 async function go(t) {
   tab = t; renderNav(); $('view').innerHTML = '<div class="muted">Loading...</div>';
-  try { await ({ dashboard: vDashboard, users: vUsers, announcements: vAnn, settings: vSettings, codes: vCodes, feedback: vFeedback, log: vLog }[t])(); }
+  try { await ({ dashboard: vDashboard, users: vUsers, announcements: vAnn, settings: vSettings, ads: vAds, codes: vCodes, feedback: vFeedback, log: vLog }[t])(); }
   catch (e) { $('view').innerHTML = `<div class="card" style="color: var(--red);">${esc(e.message || 'Something went wrong.')}</div>`; }
 }
 
@@ -271,6 +271,87 @@ async function saveSettings() {
     await rpc('admin_set_setting', { k: 'support_email', v: $('sE').value.trim() });
     toast('Settings saved. Users see them the next time the app opens.');
   } catch (e) { toast(e.message, true); }
+}
+
+// ---------- ads ----------
+// kind: frame = ad code shown in a safe frame, link = a "Support us" link card (smartlink / offer link), script = code that runs on the whole page (Social Bar, Popunder, Push)
+const AD_GROUPS = ['Banners', 'Inside pages', 'Rewarded (users earn XP)', 'Pop-ups', 'Links and page scripts'];
+const AD_SLOTS = [
+  { g: 0, k: 'nav_banner', t: 'Navigation banner', d: 'A small banner fixed just above the bottom navigation bar. Shown on every page.', kind: 'frame', h: 60, f: [] },
+  { g: 0, k: 'home_banner', t: 'Dashboard banner', d: 'A banner on the Dashboard, under the greeting.', kind: 'frame', h: 100, f: [] },
+  { g: 0, k: 'page_top', t: 'Top of every page', d: 'A banner under the title of every page (except the Dashboard).', kind: 'frame', h: 60, f: [] },
+  { g: 0, k: 'page_bottom', t: 'Bottom of every page', d: 'A banner at the end of every page, including the Dashboard.', kind: 'frame', h: 100, f: [] },
+  { g: 0, k: 'sidebar', t: 'Side bar banner (computer screens)', d: 'A banner in the left side bar. Only shown when the app is opened on a computer or a wide screen.', kind: 'frame', h: 250, f: [] },
+  { g: 1, k: 'feed', t: 'In-feed ad (between sections)', d: 'A bigger ad between the sections of every page (except the Dashboard). Good for 300x250 ads and native ads.', kind: 'frame', h: 250, f: [] },
+  { g: 2, k: 'rewards', t: 'Rewards ad (Dashboard)', d: 'A "Free XP" card on the Dashboard. The user watches the ad, waits, then claims the XP.', kind: 'frame', h: 250, f: ['seconds', 'xp', 'daily'] },
+  { g: 2, k: 'rewards_bonus', t: 'Bonus rewards ad (Achievements page)', d: 'A second "Free XP" card on the Achievements page. It has its own daily limit, so users can earn more.', kind: 'frame', h: 250, f: ['seconds', 'xp', 'daily'], def: { xp: 100 } },
+  { g: 3, k: 'app_open', t: 'App-open ad', d: 'A full-screen ad shown once each time the app is opened (after login).', kind: 'frame', h: 250, f: ['seconds'], def: { seconds: 5 } },
+  { g: 3, k: 'interstitial', t: 'Full-screen ad (between pages)', d: 'A pop-up ad shown after the user has opened several pages. It can be closed after a few seconds.', kind: 'frame', h: 250, f: ['seconds', 'every'], def: { seconds: 5 } },
+  { g: 3, k: 'complete_ad', t: 'Pop-up after completing habits or tasks', d: 'A pop-up ad shown after the user has completed several habits or tasks (right after they feel good).', kind: 'frame', h: 250, f: ['seconds', 'every'], def: { seconds: 5, every: 5 } },
+  { g: 4, k: 'support_link', t: '"Support us" link (smartlink / direct link)', d: 'A card on the Dashboard, More and Settings pages with a button that opens your link (Adsterra Smartlink, Monetag direct link, offerwall, affiliate link). You earn when users tap it.', kind: 'link' },
+  { g: 4, k: 'page_script', t: 'Page script (Social Bar, Popunder, Push notifications)', d: 'Code that must run on the whole page, such as an Adsterra Social Bar, a Popunder or a Push notification script. Paste only the script from a network you trust: it runs inside the app page.', kind: 'script' }
+];
+const AD_F = { seconds: ['Wait time (seconds)', 15, 3, 60], xp: ['XP reward', 50, 1, 1000], daily: ['Rewards per day', 5, 1, 100], every: ['Show after N times', 8, 2, 100] };
+function adFields(S) { return [['height', 'Height (px)', S.h, 30, 600]].concat(S.f.map(f => [f, AD_F[f][0], (S.def && S.def[f]) || AD_F[f][1], AD_F[f][2], AD_F[f][3]])); }
+async function vAds() {
+  const s = await rpc('admin_get_settings'), all = (s.ad_slots && typeof s.ad_slots === 'object') ? s.ad_slots : {};
+  $('view').innerHTML = `<div class="card"><h2>Ads</h2><div class="muted" style="line-height: 1.7;">Every place where the app can earn money has its own box. Paste the code from your ad network (Adsterra, Monetag, PropellerAds, an HTML banner...), turn it ON and press Save. Users see it the next time the app opens or within a few minutes.<br>
+    The switch <b>Ads allowed for free users</b> in App settings is the master switch: when it is off, no ad is shown. Premium users never see banners, pop-ups or links.<br>
+    Use <b>Preview</b> first. Some networks (for example Google AdSense) may refuse to show inside the app; Google AdMob is only for the Android app (config.js).<br>
+    Tip: do not turn on every place at once. Too many ads make users leave. Start with the banner, the rewards ad and one pop-up.</div></div>`
+    + AD_GROUPS.map((g, gi) => `<h2 style="margin: 22px 0 8px; font-size: 15px; color: var(--cyan);">${g}</h2>` + AD_SLOTS.filter(S => S.g === gi).map(S => adCard(S, all[S.k] || {})).join('')).join('');
+}
+function adStatus(S, v) {
+  const live = v.on && (S.kind === 'link' ? /^https:\/\//i.test(v.url || '') : String(v.code || '').trim());
+  return `<span style="font-size: 12px; font-weight: 700; color: ${live ? 'var(--cyan)' : 'var(--muted)'};">${live ? 'LIVE' : (v.on ? 'ON, but empty' : 'OFF')}</span>`;
+}
+function adCard(S, v) {
+  const head = `<div class="row" style="justify-content: space-between; margin-bottom: 6px;"><h2 style="margin: 0;">${S.t}</h2>${adStatus(S, v)}</div><div class="muted" style="margin-bottom: 10px;">${S.d}</div>
+    <label style="display: flex; gap: 8px; align-items: center; color: var(--text);"><input type="checkbox" id="ad_${S.k}_on" style="width: auto;" ${v.on ? 'checked' : ''}> Turn this ON</label>`;
+  if (S.kind === 'link') return `<div class="card">${head}
+    <label for="ad_${S.k}_url">Link (must start with https://)</label><input id="ad_${S.k}_url" maxlength="1000" placeholder="https://..." value="${esc(v.url || '')}">
+    <label for="ad_${S.k}_label">Card title</label><input id="ad_${S.k}_label" maxlength="60" placeholder="Support ARISE CORE" value="${esc(v.label || '')}">
+    <label for="ad_${S.k}_text">Small text under the title</label><input id="ad_${S.k}_text" maxlength="120" placeholder="Tap to see today's offer" value="${esc(v.text || '')}">
+    <div class="row" style="margin-top: 14px;"><button class="btn" onclick="adSave('${S.k}')">Save</button><button class="btn ghost" onclick="adPreview('${S.k}')">Test link</button></div></div>`;
+  if (S.kind === 'script') return `<div class="card">${head}
+    <label for="ad_${S.k}_code">Script (paste here)</label><textarea id="ad_${S.k}_code" rows="5" spellcheck="false" style="font-family: monospace; font-size: 12px;" placeholder="Paste the Social Bar / Popunder / Push script here">${esc(v.code || '')}</textarea>
+    <div class="muted" style="margin-top: 8px;">Runs once when the app opens, only for free users. It can open pop-ups, so test it on your own phone first. Changes apply the next time the app is opened.</div>
+    <div class="row" style="margin-top: 14px;"><button class="btn" onclick="adSave('${S.k}')">Save</button></div></div>`;
+  const fields = adFields(S).map(([f, l, def, mn, mx]) => `<div><label for="ad_${S.k}_${f}">${l}</label><input type="number" id="ad_${S.k}_${f}" min="${mn}" max="${mx}" value="${Number(v[f]) || def}"></div>`).join('');
+  return `<div class="card">${head}
+    <label for="ad_${S.k}_code">Ad code (paste here)</label><textarea id="ad_${S.k}_code" rows="5" spellcheck="false" style="font-family: monospace; font-size: 12px;" placeholder="Paste the code from your ad network here">${esc(v.code || '')}</textarea>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin: 10px 0 0;">${fields}</div>
+    <label style="display: flex; gap: 8px; align-items: center; color: var(--text); margin-top: 12px;"><input type="checkbox" id="ad_${S.k}_trust" style="width: auto;" ${v.trusted ? 'checked' : ''}> Let this ad access the app page (only if your ad network needs it and you trust it)</label>
+    <div class="row" style="margin-top: 14px;"><button class="btn" onclick="adSave('${S.k}')">Save</button><button class="btn ghost" onclick="adPreview('${S.k}')">Preview</button></div></div>`;
+}
+function adRead(S) {
+  const o = { on: $('ad_' + S.k + '_on').checked };
+  if (S.kind === 'link') { o.url = $('ad_' + S.k + '_url').value.trim(); o.label = $('ad_' + S.k + '_label').value.trim(); o.text = $('ad_' + S.k + '_text').value.trim(); return o; }
+  o.code = $('ad_' + S.k + '_code').value.trim();
+  if (S.kind === 'script') return o;
+  o.trusted = $('ad_' + S.k + '_trust').checked;
+  adFields(S).forEach(([f, l, def, mn, mx]) => { o[f] = Math.min(mx, Math.max(mn, parseInt($('ad_' + S.k + '_' + f).value, 10) || def)); });
+  return o;
+}
+async function adSave(k) {
+  const S = AD_SLOTS.find(x => x.k === k), o = adRead(S);
+  if (S.kind === 'link') { if (o.on && !/^https:\/\//i.test(o.url)) return toast('The link must start with https://', true); }
+  else { if ((o.code || '').length > 20000) return toast('The code is too long (max 20000 characters).', true); if (o.on && !o.code) return toast('Paste the code first, or turn it off.', true); }
+  try {
+    const s = await rpc('admin_get_settings'), all = (s.ad_slots && typeof s.ad_slots === 'object') ? s.ad_slots : {};
+    all[k] = o;
+    await rpc('admin_set_setting', { k: 'ad_slots', v: all });
+    toast(S.t + ' saved.'); vAds();
+  } catch (e) { toast(e.message, true); }
+}
+function adPreview(k) {
+  const S = AD_SLOTS.find(x => x.k === k), o = adRead(S);
+  if (S.kind === 'link') { if (!/^https:\/\//i.test(o.url)) return toast('The link must start with https://', true); window.open(o.url, '_blank', 'noopener'); return; }
+  if (!o.code) return toast('Paste the ad code first.', true);
+  openModal(`<h2>Preview: ${S.t}</h2><div class="muted" style="margin-bottom: 8px;">This is how the ad looks inside the app (${o.height}px high). If it stays empty, your ad network may not allow this place or needs the app-page option.</div><iframe id="adPrev" style="width: 100%; height: ${o.height}px; border: 1px solid var(--line); border-radius: 10px; background: #fff;" referrerpolicy="no-referrer"></iframe><div class="row" style="margin-top: 12px;"><button class="btn ghost" onclick="closeModal()">Close</button></div>`);
+  const f = $('adPrev');
+  f.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox' + (o.trusted ? ' allow-same-origin' : ''));
+  f.srcdoc = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100%}</style></head><body>' + o.code + '</body></html>';
 }
 
 // ---------- premium codes ----------

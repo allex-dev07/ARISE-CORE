@@ -216,3 +216,17 @@ One-time setup in Supabase:
 2. **Authentication > Emails > SMTP Settings:** set your own SMTP (Gmail app password, Brevo or Resend).
 3. **Authentication > Emails > Templates:** "Confirm sign up" and "Magic link or OTP" must contain `{{ .Token }}` so the email carries the code.
 4. **Authentication > Providers > Email:** keep "Confirm email" on.
+
+---
+
+## Ads (paste ad code in the admin panel)
+
+1. **SQL Editor:** run `5_ads_setup.sql` once (after files 1 to 4).
+2. Open the admin panel > **Ads**. There is one box for each place: Navigation banner, Dashboard banner, Rewards ad and Full-screen ad.
+3. Paste the ad code from your ad network, tick **Turn this ad ON**, press **Save**. Use **Preview** to test.
+4. Users see the change the next time the app opens (or within about 10 minutes).
+- The master switch **Ads allowed for free users** (App settings) turns all of them off. Premium users never see banners or pop-ups.
+- Ads run in a sandboxed frame so they cannot read the user's data. Tick "Let this ad access the app page" only if your ad network needs it.
+
+Ad places you can fill (Admin > Ads): Navigation banner, Dashboard banner, Top of every page, Bottom of every page, Side bar (computers), In-feed ad, Rewards ad (Dashboard), Bonus rewards ad (Achievements), App-open ad, Full-screen ad between pages, Pop-up after completing habits/tasks, "Support us" link (smartlink), and Page script (Social Bar / Popunder / Push).
+Ads are loaded only in the page the user is looking at, so impressions stay real and your ad account stays safe.
