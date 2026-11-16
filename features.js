@@ -1381,6 +1381,8 @@ function ST() {
     const s = f.steps;
     s.goal = clamp(Math.round(Number(s.goal)) || 8000, 500, 100000);
     s.stride = clamp(Math.round(Number(s.stride)) || 75, 30, 150);
+    s.sens = ['low', 'normal', 'high'].includes(s.sens) ? s.sens : 'normal';
+    s.cal = clamp(Number(s.cal) || 1, 0.5, 2);
     if (!isObj(s.days)) s.days = {};
     return s;
 }
@@ -1410,18 +1412,75 @@ function liveTick() {
     const t = byId('fxStepsNum'); if (t) t.textContent = fmtN(stepsOn(TODAY()));
     const b = byId('fxStepsBar'); if (b) b.style.width = clamp(Math.round(stepsOn(TODAY()) / ST().goal * 100), 0, 100) + '%';
 }
+/* STEP-DETECTOR-START */
+/* Pedometer: low-pass filter + moving baseline + adaptive threshold + peak merging + rhythm check.
+   A step is only counted when 5 evenly spaced peaks appear in a row, so random taps and road bumps are ignored. */
+function makeStepDetector(sens) {
+    const k = { low: 1.35, normal: 1, high: 0.75 }[sens] || 1;
+    const z = { dev: 0, init: false, t: 0, s: 0, base: 0, env: 0, d1: 0, d2: 0, t1: 0, pend: null, cand: [], ivs: [], miss: 0, walking: false };
+    function reset(t) { z.cand = t ? [t] : []; z.ivs = []; z.miss = 0; z.walking = false; z.dev = 0; }
+    function accept(t) {
+        const prev = z.cand.length ? z.cand[z.cand.length - 1] : 0, gap = prev ? (t - prev) / 1000 : 99;
+        if (gap > 1.25) { reset(t); return 0; }
+        if (z.walking) {
+            const med = z.ivs.slice().sort((a, b) => a - b)[z.ivs.length >> 1] || 0.5;
+            const r = gap / med;
+            if (r < 0.55 || r > 2.5) { if (++z.miss >= 3) reset(t); return 0; }
+            z.dev = z.dev * 0.8 + 0.2 * Math.min(1, Math.abs(r - 1));       /* how uneven the rhythm is */
+            if (z.dev > 0.3) { reset(t); return 0; }
+            z.miss = 0; z.cand.push(t); if (z.cand.length > 8) z.cand.shift();
+            const n = r >= 1.6 ? 2 : 1;               /* one step in between was too weak to see */
+            z.ivs.push(gap / n); if (z.ivs.length > 6) z.ivs.shift();
+            return n;
+        }
+        z.cand.push(t); if (z.cand.length > 8) z.cand.shift();
+        if (z.cand.length >= 5) {
+            const c = z.cand.slice(-5), iv = [];
+            for (let i = 1; i < c.length; i++) iv.push((c[i] - c[i - 1]) / 1000);
+            const mean = iv.reduce((a, b) => a + b, 0) / iv.length;
+            if (mean >= 0.3 && iv.every(x => Math.abs(x - mean) <= 0.33 * mean)) { z.walking = true; z.ivs = iv; z.miss = 0; return 5; }
+        }
+        return 0;
+    }
+    function flush(now, force) {
+        if (z.pend && (force || now - z.pend.t >= 270)) { const t = z.pend.t; z.pend = null; return accept(t); }
+        return 0;
+    }
+    feed.flush = () => flush(0, true);
+    return feed;
+    function feed(m, now) {
+        if (!z.init || now - z.t > 600) { const out = flush(now, true); z.init = true; z.s = m; z.base = m; z.t = now; z.d1 = 0; z.d2 = 0; z.t1 = now; reset(0); return out; }
+        const dt = Math.min(0.1, (now - z.t) / 1000); z.t = now; if (dt <= 0) return 0;
+        z.s += (m - z.s) * dt / (dt + 0.022);
+        z.base += (z.s - z.base) * dt / (dt + 0.7);
+        const d = z.s - z.base;
+        z.env = Math.max(Math.abs(d), z.env * Math.exp(-dt / 3));
+        let out = flush(now, false);
+        if (z.d1 > z.d2 && z.d1 >= d) {
+            const thr = Math.max(0.8 * k, Math.min(3.2 * k, 0.35 * z.env));
+            if (z.d1 > thr) {
+                const pk = { t: z.t1, a: z.d1 };
+                if (z.pend && pk.t - z.pend.t < 270) { if (pk.a > z.pend.a) z.pend = pk; }
+                else { out += flush(now, true); z.pend = pk; }
+            }
+        }
+        z.d2 = z.d1; z.d1 = d; z.t1 = now;
+        return out;
+    }
+}
+/* STEP-DETECTOR-END */
+
+function addLiveSteps(n) {
+    const adj = n * ST().cal; live.frac += adj;
+    const w = Math.floor(live.frac); live.frac -= w;
+    if (w > 0) { livePending += w; live.session += w; if (livePending >= 5) flushLive(); liveTick(); }
+}
 function onMotion(e) {
     if (!live) return;
     const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
     live.got = true;
-    const m = Math.hypot(a.x || 0, a.y || 0, a.z || 0), now = Date.now();
-    if (!live.avg) live.avg = m;
-    live.avg += (m - live.avg) * 0.08;
-    if (m - live.avg > 1.5 && now - live.last > 300) {
-        live.last = now; livePending++; live.session++;
-        if (livePending >= 5) flushLive();
-        liveTick();
-    }
+    const n = live.det(Math.hypot(a.x || 0, a.y || 0, a.z || 0), performance.now());
+    if (n) addLiveSteps(n);
 }
 async function startLive() {
     if (live) return;
@@ -1430,19 +1489,78 @@ async function startLive() {
         try { if (await DeviceMotionEvent.requestPermission() !== 'granted') { stepMsg = 'Motion permission was denied. Allow it in your browser settings to count steps.'; return renderSteps(); } }
         catch (e) { stepMsg = 'Could not get motion permission.'; return renderSteps(); }
     }
-    live = { avg: 0, last: 0, got: false, session: 0 }; stepMsg = '';
+    live = { got: false, session: 0, frac: 0, det: makeStepDetector(ST().sens) }; stepMsg = '';
     window.addEventListener('devicemotion', onMotion);
     try { if (navigator.wakeLock) wl = await navigator.wakeLock.request('screen'); } catch (e) {}
     setTimeout(() => { if (live && !live.got) { stopLive(); stepMsg = 'No sensor data received. Use Chrome on Android (https) or Safari on iPhone, and keep the app open.'; renderSteps(); } }, 3500);
     renderSteps();
 }
 function stopLive() {
-    window.removeEventListener('devicemotion', onMotion); flushLive();
+    window.removeEventListener('devicemotion', onMotion);
+    if (live && live.det) { const n = live.det.flush(); if (n) addLiveSteps(n); }
+    flushLive();
     try { if (wl) wl.release(); } catch (e) {} wl = null; live = null;
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) flushLive(); else if (live && !wl && navigator.wakeLock) navigator.wakeLock.request('screen').then(x => { wl = x; }).catch(() => {}); });
 window.addEventListener('pagehide', flushLive);
 FX.stepsLive = async function () { if (live) { const n = live.session; stopLive(); stepMsg = `Stopped. ${n} step${n === 1 ? '' : 's'} counted this session.`; renderSteps(); } else await startLive(); };
+
+/* ----- accuracy: sensitivity and calibration (walk 20 steps, tell the app the real number) ----- */
+let calib = null; // { det, raw, got, state: 'run' | 'ask' }
+function releaseWl() { try { if (wl) wl.release(); } catch (e) {} wl = null; }
+function onCalMotion(e) {
+    if (!calib || calib.state !== 'run') return;
+    const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
+    calib.got = true;
+    const n = calib.det(Math.hypot(a.x || 0, a.y || 0, a.z || 0), performance.now());
+    if (n) { calib.raw += n; const el = byId('fxCalNum'); if (el) el.textContent = calib.raw; }
+}
+async function motionOk() {
+    if (typeof DeviceMotionEvent === 'undefined') { stepMsg = 'This browser has no motion sensor.'; return false; }
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        try { if (await DeviceMotionEvent.requestPermission() !== 'granted') { stepMsg = 'Motion permission was denied. Allow it in your browser settings.'; return false; } }
+        catch (e) { stepMsg = 'Could not get motion permission.'; return false; }
+    }
+    return true;
+}
+FX.stepsCalStart = async function () {
+    if (live) stopLive();
+    if (!(await motionOk())) return renderSteps();
+    calib = { det: makeStepDetector(ST().sens), raw: 0, got: false, state: 'run' }; stepMsg = '';
+    window.addEventListener('devicemotion', onCalMotion);
+    try { if (navigator.wakeLock) wl = await navigator.wakeLock.request('screen'); } catch (e) {}
+    setTimeout(() => { if (calib && calib.state === 'run' && !calib.got) { FX.stepsCalCancel(); stepMsg = 'No sensor data received. Use Chrome on Android (https) or Safari on iPhone.'; renderSteps(); } }, 3500);
+    renderSteps();
+};
+FX.stepsCalStop = function () {
+    if (!calib) return;
+    window.removeEventListener('devicemotion', onCalMotion);
+    const n = calib.det.flush(); if (n) calib.raw += n;
+    calib.state = 'ask'; releaseWl(); renderSteps();
+};
+FX.stepsCalCancel = function () { window.removeEventListener('devicemotion', onCalMotion); calib = null; releaseWl(); stepMsg = ''; renderSteps(); };
+FX.stepsCalApply = function () {
+    const real = Number(byId('fxCalReal').value);
+    if (!(real >= 5 && real <= 500)) { stepMsg = 'Enter the steps you really walked (5 to 500).'; return renderSteps(); }
+    if (!calib || calib.raw < 1) { calib = null; stepMsg = 'The phone counted 0 steps. Set Sensitivity to High, then calibrate again.'; return renderSteps(); }
+    const s = ST(); s.cal = clamp(Math.round(real / calib.raw * 100) / 100, 0.5, 2); dirty = true; saveData();
+    stepMsg = 'Done. Your live steps are now adjusted by x' + s.cal.toFixed(2) + '.'; calib = null; renderSteps();
+};
+FX.stepsCalReset = function () { const s = ST(); s.cal = 1; dirty = true; saveData(); stepMsg = 'Calibration reset.'; renderSteps(); };
+FX.stepsSens = function () {
+    const v = byId('fxStSens').value, s = ST(); s.sens = ['low', 'normal', 'high'].includes(v) ? v : 'normal'; dirty = true; saveData();
+    stepMsg = 'Sensitivity saved. It applies the next time you start counting.'; renderSteps();
+};
+function accuracyPanel() {
+    const s = ST(); let cal;
+    if (calib && calib.state === 'run') cal = `<div class="fx-note" style="margin:0 0 10px;">Walk <b>20 normal steps</b> holding the phone the way you usually carry it. Counted so far: <b id="fxCalNum">${calib.raw}</b></div><div style="display:flex;gap:10px;"><button class="btn-primary" onclick="FX.stepsCalStop()">Finish</button><button class="btn-primary" style="background:transparent;border-color:var(--text-muted);color:var(--text-muted);" onclick="FX.stepsCalCancel()">Cancel</button></div>`;
+    else if (calib && calib.state === 'ask') cal = `<div class="fx-note" style="margin:0 0 10px;">The phone counted <b>${calib.raw}</b>. How many steps did you really walk?</div><div class="fx-form" style="grid-template-columns:1fr auto;margin-bottom:0;"><div class="input-group"><label>Real steps</label><input type="number" id="fxCalReal" min="5" max="500" value="20"></div><button class="btn-primary" style="height:42px;" onclick="FX.stepsCalApply()">Apply</button></div><div class="fx-note" style="margin-top:10px;"><span style="text-decoration:underline;cursor:pointer;" onclick="FX.stepsCalCancel()">Cancel</span></div>`;
+    else cal = `<div class="fx-note" style="margin:0 0 10px;">Calibration: walk 20 steps, tell the app the real number, and it adjusts the counter to your phone and your walk.${s.cal !== 1 ? ` Current adjustment: <b>x${s.cal.toFixed(2)}</b> (<span style="text-decoration:underline;cursor:pointer;" onclick="FX.stepsCalReset()">reset</span>)` : ''}</div><button class="btn-primary" onclick="FX.stepsCalStart()" ${typeof DeviceMotionEvent === 'undefined' ? 'disabled' : ''}>Start calibration</button>`;
+    return `<section class="panel"><h2 class="panel-title" style="margin-bottom:6px;">Counter accuracy</h2>
+        <div class="fx-note" style="margin:0 0 12px;">Steps are only counted when the phone moves in a steady walking rhythm, so taps, typing and bumps in a bus are ignored. If gentle walking is missed, use <b>High</b>. If it counts extra, use <b>Low</b>.</div>
+        <div class="fx-form" style="grid-template-columns:1fr auto;"><div class="input-group"><label>Sensitivity</label><select id="fxStSens"><option value="low" ${s.sens === 'low' ? 'selected' : ''}>Low (fewer false steps)</option><option value="normal" ${s.sens === 'normal' ? 'selected' : ''}>Normal</option><option value="high" ${s.sens === 'high' ? 'selected' : ''}>High (counts gentle walking)</option></select></div><button class="btn-primary" style="height:42px;" onclick="FX.stepsSens()">Save</button></div>
+        ${cal}</section>`;
+}
 
 /* ----- actions ----- */
 FX.stepsAdd = n => { flushLive(); setSteps(TODAY(), stepsRaw(TODAY()) + n); stepMsg = ''; renderSteps(); };
@@ -1471,7 +1589,7 @@ function renderSteps() {
     const bars = days.map((d, i) => `<div class="c"><span>${vals[i] >= 1000 ? (vals[i] / 1000).toFixed(1) + 'k' : vals[i]}</span><i style="height:${Math.max(3, Math.min(100, vals[i] / s.goal * 100))}%;${vals[i] >= s.goal ? 'background:var(--neon-green);' : ''}${d === today ? 'outline:2px solid var(--neon-purple);' : ''}"></i><span>${DAY_NAMES[weekdayOf(d)].slice(0, 2)}</span></div>`).join('');
     const hist = lastDays(14).reverse().filter(d => stepsOn(d) > 0).map(d => `<div class="fx-row"><div class="grow"><div class="t">${fmtN(stepsOn(d))} steps</div><div class="s">${E(d)} &middot; ${kmOf(stepsOn(d)).toFixed(1)} km &middot; ${stepsOn(d) >= s.goal ? 'goal reached' : Math.round(stepsOn(d) / s.goal * 100) + '% of goal'}</div></div></div>`).join('');
     const sensor = typeof DeviceMotionEvent !== 'undefined';
-    box.innerHTML = `${stepMsg ? `<div class="bd-banner warn" style="margin-bottom:14px;"><div class="bd-banner-text">${E(stepMsg)}</div></div>` : ''}
+    box.innerHTML = `${stepMsg ? `<div class="bd-banner warn" style="margin-bottom:14px;"><div style="font-size:14px;line-height:1.5;">${E(stepMsg)}</div></div>` : ''}
     <section class="panel"><div style="display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;"><div><div class="fx-muted">Today</div><div style="font-size:52px;font-weight:800;line-height:1.1;" id="fxStepsNum">${fmtN(n)}</div><div class="fx-muted">of ${fmtN(s.goal)} steps &middot; ${pct}%</div></div>
         <div style="display:flex;gap:22px;flex-wrap:wrap;"><div><div class="fx-muted">Distance</div><b style="font-size:20px;">${kmOf(n).toFixed(2)} km</b></div><div><div class="fx-muted">Calories (est.)</div><b style="font-size:20px;">${fmtN(kcalOf(n))} kcal</b></div><div><div class="fx-muted">Goal streak</div><b style="font-size:20px;">${stepGoalStreak()} days</b></div></div></div>
         <div class="fx-bar ${pct >= 100 ? 'green' : ''}" style="height:14px;margin:16px 0;"><i id="fxStepsBar" style="width:${pct}%"></i></div>
@@ -1481,6 +1599,7 @@ function renderSteps() {
     <section class="panel"><h2 class="panel-title" style="margin-bottom:6px;">Live step counter <span class="fx-muted" style="font-size:12px;font-weight:500;">(experimental)</span></h2>
         <div class="fx-note" style="margin:0 0 12px;">Counts steps with your phone's motion sensor. Websites cannot count in the background, so keep this app open and the screen on while you walk, with the phone in your hand or pocket. For exact numbers, copy the total from your phone's health app above.</div>
         <button class="btn-primary" onclick="FX.stepsLive()" ${sensor ? '' : 'disabled'}>${live ? 'Stop counting (' + live.session + ' this session)' : 'Start live counting'}</button>${sensor ? '' : '<div class="fx-note">No motion sensor found on this device.</div>'}</section>
+    ${accuracyPanel()}
     <section class="panel"><h2 class="panel-title" style="margin-bottom:10px;">Last 7 days</h2><div class="fx-grid">${tile('Total', fmtN(tot), '')}${tile('Daily average', fmtN(avg), '')}${tile('Best day', fmtN(best), '')}${tile('Goal days', vals.filter(v => v >= s.goal).length + '/7', '')}</div><div class="fx-bars">${bars}</div><div class="fx-note">Green bars reached your goal.</div></section>
     <section class="panel"><h2 class="panel-title" style="margin-bottom:10px;">Settings</h2><div class="fx-form"><div class="input-group"><label>Daily goal (steps)</label><input type="number" id="fxStGoal" min="500" max="100000" value="${s.goal}"></div><div class="input-group"><label>Step length (cm)</label><input type="number" id="fxStStride" min="30" max="150" value="${s.stride}"></div></div><button class="btn-primary" onclick="FX.stepsSettings()">Save settings</button>
         <h3 class="fx-h3" style="margin-top:22px;">Add or fix a past day</h3><div class="fx-form" style="grid-template-columns:1fr 1fr auto;"><div class="input-group"><label>Date</label><input type="date" id="fxStDate" max="${today}" value="${dateAdd(today, -1)}"></div><div class="input-group"><label>Steps</label><input type="number" id="fxStDay" min="0" max="200000" placeholder="e.g. 7500"></div><button class="btn-primary" style="height:42px;" onclick="FX.stepsEditDay()">Save</button></div>

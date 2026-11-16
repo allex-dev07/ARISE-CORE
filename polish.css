@@ -235,3 +235,6 @@ span.d,
 @media (max-width: 768px) {
     body:not([data-page="dashboard"]) .main-content { padding-top: calc(20px + env(safe-area-inset-top)) !important; }
 }
+
+/* messages inside feature pages (steps, social, logs...) must be visible */
+[id^="fx-"][id$="-body"] .bd-banner .bd-banner-text { display: block !important; }
