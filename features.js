@@ -1383,6 +1383,7 @@ function ST() {
     s.stride = clamp(Math.round(Number(s.stride)) || 75, 30, 150);
     s.sens = ['low', 'normal', 'high'].includes(s.sens) ? s.sens : 'normal';
     s.cal = clamp(Number(s.cal) || 1, 0.5, 2);
+    s.auto = s.auto !== false; /* always-on: counting starts by itself every time the app opens */
     if (!isObj(s.days)) s.days = {};
     return s;
 }
@@ -1482,28 +1483,47 @@ function onMotion(e) {
     const n = live.det(Math.hypot(a.x || 0, a.y || 0, a.z || 0), performance.now());
     if (n) addLiveSteps(n);
 }
-async function startLive() {
+async function startLive(silent) {
     if (live) return;
-    if (typeof DeviceMotionEvent === 'undefined') { stepMsg = 'This browser has no motion sensor. You can still add steps by hand.'; return renderSteps(); }
+    const fail = m => { if (!silent) { stepMsg = m; renderSteps(); } };
+    if (typeof DeviceMotionEvent === 'undefined') return fail('This browser has no motion sensor. You can still add steps by hand.');
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
-        try { if (await DeviceMotionEvent.requestPermission() !== 'granted') { stepMsg = 'Motion permission was denied. Allow it in your browser settings to count steps.'; return renderSteps(); } }
-        catch (e) { stepMsg = 'Could not get motion permission.'; return renderSteps(); }
+        try { if (await DeviceMotionEvent.requestPermission() !== 'granted') return fail('Motion permission was denied. Allow it in your browser settings to count steps.'); }
+        catch (e) { return fail('Could not get motion permission.'); }
     }
+    if (live) return;
     live = { got: false, session: 0, frac: 0, det: makeStepDetector(ST().sens) }; stepMsg = '';
+    if (!silent) { const s = ST(); if (!s.auto) { s.auto = true; dirty = true; saveData(); } }
     window.addEventListener('devicemotion', onMotion);
-    try { if (navigator.wakeLock) wl = await navigator.wakeLock.request('screen'); } catch (e) {}
-    setTimeout(() => { if (live && !live.got) { stopLive(); stepMsg = 'No sensor data received. Use Chrome on Android (https) or Safari on iPhone, and keep the app open.'; renderSteps(); } }, 3500);
+    await grabWl();
+    setTimeout(() => { if (live && !live.got) { stopLive(); fail('No sensor data received. Use Chrome on Android (https) or Safari on iPhone, and keep the app open.'); } }, 3500);
     renderSteps();
 }
+async function grabWl() { try { if (navigator.wakeLock && !wl) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener && wl.addEventListener('release', () => { wl = null; }); } } catch (e) {} }
+/* ALWAYS-ON: start counting by itself (no button). iPhone Safari needs one tap for motion permission, so there we start on the first tap anywhere. */
+let autoArmed = false;
+function autoStartLive() {
+    if (!ST().auto || live || calib || typeof DeviceMotionEvent === 'undefined') return;
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        if (autoArmed) return; autoArmed = true;
+        const go = () => { autoArmed = false; document.removeEventListener('pointerdown', go, true); if (ST().auto && !live && !calib) startLive(true); };
+        document.addEventListener('pointerdown', go, true);
+    } else startLive(true);
+}
+FX.autoStartLive = autoStartLive;
 function stopLive() {
     window.removeEventListener('devicemotion', onMotion);
     if (live && live.det) { const n = live.det.flush(); if (n) addLiveSteps(n); }
     flushLive();
     try { if (wl) wl.release(); } catch (e) {} wl = null; live = null;
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) flushLive(); else if (live && !wl && navigator.wakeLock) navigator.wakeLock.request('screen').then(x => { wl = x; }).catch(() => {}); });
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { flushLive(); return; }
+    if (live) { grabWl(); const was = live.session; setTimeout(() => { if (live && live.session === was && !live.got) { stopLive(); autoStartLive(); } }, 4000); }
+    else autoStartLive();
+});
 window.addEventListener('pagehide', flushLive);
-FX.stepsLive = async function () { if (live) { const n = live.session; stopLive(); stepMsg = `Stopped. ${n} step${n === 1 ? '' : 's'} counted this session.`; renderSteps(); } else await startLive(); };
+FX.stepsLive = async function () { if (live) { const n = live.session; stopLive(); const s = ST(); s.auto = false; dirty = true; saveData(); stepMsg = `Stopped. ${n} step${n === 1 ? '' : 's'} counted this session. Always-on is OFF until you press Start again.`; renderSteps(); } else await startLive(); };
 
 /* ----- accuracy: sensitivity and calibration (walk 20 steps, tell the app the real number) ----- */
 let calib = null; // { det, raw, got, state: 'run' | 'ask' }
@@ -1596,9 +1616,9 @@ function renderSteps() {
         <div class="fx-chips" style="margin-bottom:14px;"><span class="quick-chip" onclick="FX.stepsAdd(500)">+500</span><span class="quick-chip" onclick="FX.stepsAdd(1000)">+1,000</span><span class="quick-chip" onclick="FX.stepsAdd(2000)">+2,000</span><span class="quick-chip" onclick="FX.stepsAdd(5000)">+5,000</span></div>
         <div class="fx-form" style="grid-template-columns:1fr auto;margin-bottom:0;"><div class="input-group"><label>Set today's total (from your phone's health app)</label><input type="number" id="fxStTotal" min="0" max="200000" value="${stepsRaw(today)}"></div><button class="btn-primary" style="height:42px;" onclick="FX.stepsSetToday()">Save</button></div>
         <div class="fx-note">Hitting your step goal gives <b>+5 Reality XP</b> for the day.</div></section>
-    <section class="panel"><h2 class="panel-title" style="margin-bottom:6px;">Live step counter <span class="fx-muted" style="font-size:12px;font-weight:500;">(experimental)</span></h2>
-        <div class="fx-note" style="margin:0 0 12px;">Counts steps with your phone's motion sensor. Websites cannot count in the background, so keep this app open and the screen on while you walk, with the phone in your hand or pocket. For exact numbers, copy the total from your phone's health app above.</div>
-        <button class="btn-primary" onclick="FX.stepsLive()" ${sensor ? '' : 'disabled'}>${live ? 'Stop counting (' + live.session + ' this session)' : 'Start live counting'}</button>${sensor ? '' : '<div class="fx-note">No motion sensor found on this device.</div>'}</section>
+    <section class="panel"><h2 class="panel-title" style="margin-bottom:6px;">Live step counter <span class="fx-muted" style="font-size:12px;font-weight:500;">${s.auto ? '(always on)' : '(off)'}</span></h2>
+        <div class="fx-note" style="margin:0 0 12px;">Counts steps with your phone's motion sensor. <b>Always on:</b> counting starts by itself whenever you open the app, so you do not need to press anything. Websites cannot count while the app is closed or the screen is off, so keep the app open while you walk. (The Android app can count in the background.) For exact numbers, copy the total from your phone's health app above.</div>
+        <button class="btn-primary" onclick="FX.stepsLive()" ${sensor ? '' : 'disabled'}>${live ? 'Turn off always-on (' + live.session + ' this session)' : 'Turn on always-on counting'}</button>${sensor ? '' : '<div class="fx-note">No motion sensor found on this device.</div>'}</section>
     ${accuracyPanel()}
     <section class="panel"><h2 class="panel-title" style="margin-bottom:10px;">Last 7 days</h2><div class="fx-grid">${tile('Total', fmtN(tot), '')}${tile('Daily average', fmtN(avg), '')}${tile('Best day', fmtN(best), '')}${tile('Goal days', vals.filter(v => v >= s.goal).length + '/7', '')}</div><div class="fx-bars">${bars}</div><div class="fx-note">Green bars reached your goal.</div></section>
     <section class="panel"><h2 class="panel-title" style="margin-bottom:10px;">Settings</h2><div class="fx-form"><div class="input-group"><label>Daily goal (steps)</label><input type="number" id="fxStGoal" min="500" max="100000" value="${s.goal}"></div><div class="input-group"><label>Step length (cm)</label><input type="number" id="fxStStride" min="30" max="150" value="${s.stride}"></div></div><button class="btn-primary" onclick="FX.stepsSettings()">Save settings</button>
@@ -2147,6 +2167,7 @@ function boot() {
         if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('controllerchange', enhancePrefsRefresh);
         setInterval(() => { if (!document.hidden) { applyEnergyAttr(); const d = TODAY(); if (FX.lastDay !== d) { FX.lastDay = d; renderDash(); } } }, 30000);
         FX.lastDay = TODAY();
+        setTimeout(autoStartLive, 800);
     } catch (e) { logFx('boot', e); }
 }
 function enhancePrefsRefresh() { if (q('#page-settings.active')) { try { renderPrefsPanels(); } catch (e) {} } }
